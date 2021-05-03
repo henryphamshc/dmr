@@ -6,6 +6,7 @@ using System.Linq;
 using dmr_api.Models;
 using System.Collections.Generic;
 using DMR_API.Constants;
+using CodeUtility;
 
 namespace DMR_API.Helpers.AutoMapper
 {
@@ -147,6 +148,8 @@ namespace DMR_API.Helpers.AutoMapper
            .ForMember(d => d.Ingredient, o => o.Ignore());
             CreateMap<Mailing, MailingDto>();
 
+            CreateMap<FunctionSystem, FunctionDto>();
+            CreateMap<Module, ModuleDto>();
         }
 
     }

@@ -22,6 +22,7 @@ using DMR_API.Enums;
 using AutoMapper.QueryableExtensions;
 using dmr_api.Models;
 using DMR_API.Constants;
+using CodeUtility;
 
 namespace DMR_API._Services.Services
 {
@@ -2545,12 +2546,19 @@ namespace DMR_API._Services.Services
         #endregion
 
         #region Mixing Action
+        private static Random random = new Random();
+        public static string RandomString(int length)
+        {
+            const string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            return new string(Enumerable.Repeat(chars, length)
+              .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
         public async Task<MixingInfo> Mix(MixingInfoForCreateDto mixing)
         {
             try
             {
                 var item = _mapper.Map<MixingInfoForCreateDto, MixingInfo>(mixing);
-                item.Code = CodeUtility.RandomString(8);
+                item.Code = RandomString(8);
                 item.CreatedTime = DateTime.Now;
                 var glue = await _repoGlue.FindAll().FirstOrDefaultAsync(x => x.isShow == true && x.ID == mixing.GlueID);
                 item.ExpiredTime = DateTime.Now.AddHours(glue.ExpiredTime);

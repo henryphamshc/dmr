@@ -7,6 +7,7 @@ import { ModuleComponent } from "./module/module.component";
 import { ActionComponent } from './action/action.component';
 import { VersionComponent } from './version/version.component';
 import { AuthGuard } from 'src/app/_core/_guards/auth.guard';
+import { Modulev2Component } from './modulev2/modulev2.component';
 
 const routes: Routes = [
   {
@@ -14,7 +15,7 @@ const routes: Routes = [
     children: [
       {
         path: 'module',
-        component: ModuleComponent,
+        component: Modulev2Component,
         data: {
           title: 'Module',
           functionCode: 'Module'

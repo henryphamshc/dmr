@@ -22,5 +22,6 @@ namespace DMR_API.Models
         public FunctionSystem Function { get; set; }
         public int? ModuleID { get; set; }
         public Module Module { get; set; }
+        public ICollection<FunctionTranslation> FunctionTranslations { get; set; }
     }
 }

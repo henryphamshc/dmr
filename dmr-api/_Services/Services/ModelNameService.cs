@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using DMR_API.Helpers.Enum;
 using System.Transactions;
+using CodeUtility;
 
 namespace DMR_API._Services.Services
 {
@@ -251,7 +252,13 @@ namespace DMR_API._Services.Services
 
             throw new System.NotImplementedException();
         }
-
+        private static Random random = new Random();
+        public static string RandomString(int length)
+        {
+            const string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            return new string(Enumerable.Repeat(chars, length)
+              .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
         public Task<List<ModelNameDto>> FilterByFinishedStatus()
         {
 
@@ -385,7 +392,7 @@ namespace DMR_API._Services.Services
             int lenght = 8;
             if (await _repoGlue.FindAll().AnyAsync(x => x.isShow == true && x.Code.Equals(code)) == true)
             {
-                var newCode = CodeUtility.RandomString(lenght);
+                var newCode = RandomString(lenght);
                 return await GenatateGlueCode(newCode);
             }
             return code;

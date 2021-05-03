@@ -4,6 +4,7 @@ using AutoMapper;
 using System;
 using System.Linq;
 using dmr_api.Models;
+using CodeUtility;
 
 namespace DMR_API.Helpers.AutoMapper
 {
@@ -79,6 +80,8 @@ namespace DMR_API.Helpers.AutoMapper
             CreateMap<ScaleMachine, ScaleMachineDto>();
 
             CreateMap<MailingDto, Mailing>();
+            CreateMap<FunctionDto, FunctionSystem>();
+            CreateMap<ModuleDto, Module>();
 
 
             //CreateMap<AuditTypeDto, MES_Audit_Type_M>();

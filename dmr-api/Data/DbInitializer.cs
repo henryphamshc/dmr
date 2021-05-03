@@ -17,6 +17,30 @@ namespace dmr_api.Data
             _context = context;
         }
         public async Task Seed() {
+
+            #region Ngôn ngữ
+            if (!(await _context.Languages.AnyAsync()))
+            {
+                await _context.Languages.AddRangeAsync(new List<Language>
+                {
+                    new Language
+                {
+                    Name = "Tiếng Việt",
+                    ID = "vi",
+                    Sequence = 1
+                },
+                    new Language
+                {
+                    Name = "Tiếng Anh",
+                    ID = "en",
+                    Sequence = 2
+                }
+                });
+                await _context.SaveChangesAsync();
+            }
+
+            #endregion
+
             #region Quyền
             if (!(await _context.Roles.AnyAsync()))
             {
@@ -47,6 +71,7 @@ namespace dmr_api.Data
                 await _context.SaveChangesAsync();
             }
             #endregion
+
             #region Thao tac
 
             if (!(await _context.Actions.AnyAsync()))
@@ -113,6 +138,59 @@ namespace dmr_api.Data
 
                 }
             }
+            #region Chuc nang
+
+            if (!(await _context.FunctionSystem.AnyAsync()))
+            {
+                var module = await _context.Modules.FirstOrDefaultAsync();
+
+                await _context.FunctionSystem.AddRangeAsync(new List<FunctionSystem> {
+                    new FunctionSystem { ModuleID = module.ID, Name = "Module", Code = "SYSTEM", Sequence = 1, Url = "/ec/system/module"},
+                    new FunctionSystem {ModuleID = module.ID, Name = "Action", Code = "SYSTEM", Sequence = 2, Url = "/ec/system/action"},
+                    new FunctionSystem {ModuleID = module.ID, Name = "Function", Code = "SYSTEM", Sequence = 3, Url = "/ec/system/function"},
+                    new FunctionSystem {ModuleID = module.ID, Name = "Action In Function", Code = "SYSTEM", Sequence = 4, Url = "/ec/system/action-in-function"}
+                });
+                await _context.SaveChangesAsync();
+
+
+                var functions =  _context.FunctionSystem;
+                var actions = _context.Actions;
+
+                if (!_context.ActionInFunctionSystem.Any())
+                {
+                    var actionInfunctionlist = new List<ActionInFunctionSystem>();
+                    foreach (var function in functions)
+                    {
+                        foreach (var action in actions)
+                        {
+                            var createAction = new ActionInFunctionSystem()
+                            {
+                                ActionID = action.ID,
+                                FunctionSystemID = function.ID
+                            };
+                            actionInfunctionlist.Add(createAction);
+                        }
+                    }
+                    _context.ActionInFunctionSystem.AddRange(actionInfunctionlist);
+                    await _context.SaveChangesAsync();
+
+                }
+
+                if (!_context.Permisions.Any())
+                {
+                    var adminRole = await _context.Roles.FirstOrDefaultAsync(x => x.Code == SuperAdminCode);
+                    var permissionlist = new List<Permission>();
+                    var actionInFunction = _context.ActionInFunctionSystem;
+                    foreach (var item in actionInFunction)
+                    {
+                        permissionlist.Add(new Permission {RoleID = adminRole.ID, FunctionSystemID = item.FunctionSystemID , ActionID = item.ActionID});
+                    }
+                    _context.Permisions.AddRange(permissionlist);
+                    await _context.SaveChangesAsync();
+
+                }
+            }
+            #endregion
             #endregion
         }
     }

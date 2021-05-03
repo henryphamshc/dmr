@@ -490,6 +490,34 @@ namespace DMR_API.Migrations
                     b.ToTable("FunctionSystem");
                 });
 
+            modelBuilder.Entity("DMR_API.Models.FunctionTranslation", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<DateTime>("CreatedTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("FunctionSystemID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LanguageID")
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("FunctionSystemID");
+
+                    b.HasIndex("LanguageID");
+
+                    b.ToTable("FunctionTranslations");
+                });
+
             modelBuilder.Entity("DMR_API.Models.Glue", b =>
                 {
                     b.Property<int>("ID")
@@ -825,6 +853,23 @@ namespace DMR_API.Migrations
                     b.ToTable("KindType");
                 });
 
+            modelBuilder.Entity("DMR_API.Models.Language", b =>
+                {
+                    b.Property<string>("ID")
+                        .HasColumnType("nvarchar(10)")
+                        .HasMaxLength(10);
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("int");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("Languages");
+                });
+
             modelBuilder.Entity("DMR_API.Models.Line", b =>
                 {
                     b.Property<int>("ID")
@@ -1089,6 +1134,34 @@ namespace DMR_API.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("Modules");
+                });
+
+            modelBuilder.Entity("DMR_API.Models.ModuleTranslation", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<DateTime>("CreatedTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LanguageID")
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<int?>("ModuleID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("LanguageID");
+
+                    b.HasIndex("ModuleID");
+
+                    b.ToTable("ModuleTranslations");
                 });
 
             modelBuilder.Entity("DMR_API.Models.Part", b =>
@@ -2171,6 +2244,17 @@ namespace DMR_API.Migrations
                         .HasForeignKey("ParentID");
                 });
 
+            modelBuilder.Entity("DMR_API.Models.FunctionTranslation", b =>
+                {
+                    b.HasOne("DMR_API.Models.FunctionSystem", "FunctionSystem")
+                        .WithMany()
+                        .HasForeignKey("FunctionSystemID");
+
+                    b.HasOne("DMR_API.Models.Language", "Language")
+                        .WithMany("FunctionTranslations")
+                        .HasForeignKey("LanguageID");
+                });
+
             modelBuilder.Entity("DMR_API.Models.Glue", b =>
                 {
                     b.HasOne("DMR_API.Models.BPFCEstablish", "BPFCEstablish")
@@ -2268,6 +2352,17 @@ namespace DMR_API.Migrations
                         .HasForeignKey("ModelNameID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("DMR_API.Models.ModuleTranslation", b =>
+                {
+                    b.HasOne("DMR_API.Models.Language", "Language")
+                        .WithMany("ModuleTranslations")
+                        .HasForeignKey("LanguageID");
+
+                    b.HasOne("DMR_API.Models.Module", "Module")
+                        .WithMany()
+                        .HasForeignKey("ModuleID");
                 });
 
             modelBuilder.Entity("DMR_API.Models.PeriodDispatch", b =>

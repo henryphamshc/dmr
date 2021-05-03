@@ -32,7 +32,7 @@ import { HubConnectionState } from '@microsoft/signalr';
 })
 export class DefaultLayoutComponent implements OnInit, AfterViewInit {
   public sidebarMinimized = false;
-  public navItems = navItems;
+  public navItems = [];
   public navAdmin: any;
   public navClient: any;
   navEc: any;
@@ -133,12 +133,12 @@ export class DefaultLayoutComponent implements OnInit, AfterViewInit {
     this.navAdmin = new Nav().getNavAdmin();
     this.navClient = new Nav().getNavClient();
     this.navEc = new Nav().getNavEc();
-    // this.checkTask();
+
     this.getAvatar();
     this.currentUser = JSON.parse(localStorage.getItem('user')).user.username;
     this.page = 1;
     this.pageSize = 10;
-    // this.signalrService.startConnection();
+
     this.userid = JSON.parse(localStorage.getItem('user')).user.id;
     this.getMenu();
     this.onService();
@@ -156,51 +156,25 @@ export class DefaultLayoutComponent implements OnInit, AfterViewInit {
   }
 
   getMenu() {
-    this.spinner.show();
-    this.permissionService.getMenuByUserPermission(this.userid).subscribe((menus: any[]) => {
-      this.menus = menus;
-      const navs: INavData[] = [
-        {
-          name: 'Home',
-          url: '/',
-          icon: 'icon-home',
-          badge: {
-            variant: 'info',
-            text: ''
-          }
-        },
-        {
-          title: true,
-          name: 'Mixing Room'
-        },
-      ];
-      for (const item of menus) {
-        const children = [];
-        const node = {
-          name: item.module,
-          url: item.url,
-          icon: item.icon || "icon-star",
-          children: []
-        };
-        for (const child of item?.children) {
-          const itemChild = {
-            name: child.name,
-            url: child.url,
-            icon: "far fa-circle"
-            // icon: item.icon || 'fa fa-circle'
-          };
-          children.push(itemChild);
-        }
-        node.children = children;
-        navs.push(node);
-      }
-      console.log(navs);
-      this.navItems = navs;
-      this.spinner.hide();
-      localStorage.setItem('menus', JSON.stringify(menus));
-    }, (err) => {
-      this.spinner.hide();
-    });
+    if (localStorage.getItem('navs') === null) {
+      this.spinner.show();
+      console.log('Header ------- Begin getMenuByUserPermission');
+      const langID = localStorage.getItem('lang');
+      this.permissionService.getMenuByLangID(this.userid, langID).subscribe((navs: []) => {
+        this.navItems = navs;
+        localStorage.setItem('navs', JSON.stringify(navs));
+        this.spinner.hide();
+
+      }, (err) => {
+        this.spinner.hide();
+      });
+      console.log('Header ------- end getMenuByUserPermission');
+    } else {
+      setTimeout(() => {
+        console.log('Header ------- Begin getlocalstore menu');
+        this.navItems = JSON.parse(localStorage.getItem('navs'));
+      });
+    }
   }
   home() {
     if (this.role.id === this.STAFF) {
@@ -210,6 +184,8 @@ export class DefaultLayoutComponent implements OnInit, AfterViewInit {
     }
   }
   onChange(args) {
+    this.spinner.show();
+
     if (args.itemData) {
       localStorage.removeItem('lang');
       localStorage.setItem('lang', args.itemData.id);
@@ -220,14 +196,30 @@ export class DefaultLayoutComponent implements OnInit, AfterViewInit {
           L10n.load(this.vi);
           setCulture('vi');
         }, 500);
-        location.reload();
+        this.permissionService.getMenuByLangID(this.userid, args.itemData.id).subscribe((navs: []) => {
+          this.navItems = navs;
+          localStorage.setItem('navs', JSON.stringify(navs));
+          this.spinner.hide();
+          location.reload();
+
+        }, (err) => {
+          this.spinner.hide();
+        });
       } else {
         this.dataService.setValueLocale(args.itemData.id);
         setTimeout(() => {
           L10n.load(this.en);
           setCulture('en-US');
-          location.reload();
         }, 500);
+        this.permissionService.getMenuByLangID(this.userid, args.itemData.id).subscribe((navs: []) => {
+          this.navItems = navs;
+          localStorage.setItem('navs', JSON.stringify(navs));
+          this.spinner.hide();
+          location.reload();
+
+        }, (err) => {
+          this.spinner.hide();
+        });
       }
     }
   }

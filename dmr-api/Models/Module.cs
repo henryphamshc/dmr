@@ -19,5 +19,7 @@ namespace DMR_API.Models
         public int Sequence { get; set; }
         public DateTime CreatedTime { get; set; }
         public ICollection<FunctionSystem> Functions { get; set; }
+        public ICollection<ModuleTranslation> ModuleTranslations { get; set; }
+
     }
 }

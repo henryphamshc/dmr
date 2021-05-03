@@ -50,6 +50,7 @@ import { TimePickerModule } from '@progress/kendo-angular-dateinputs';
 import { QRCodeModule } from 'angularx-qrcode';
 import { VersionComponent } from './version/version.component';
 import { VersionAddComponent } from './version/version-add/version-add.component';
+import { Modulev2Component } from './modulev2/modulev2.component';
 // Imported Syncfusion checkbox module from buttons package.
 declare var require: any;
 let defaultLang: string;
@@ -122,6 +123,7 @@ if (lang === 'vi') {
     ActionComponent,
     FunctionComponent,
     ModuleComponent,
+    Modulev2Component,
     ActionFunctionComponent,
     VersionComponent,
     VersionAddComponent

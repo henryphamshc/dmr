@@ -21,7 +21,7 @@ export class BuildingSettingComponent implements OnInit {
   fields: object = { text: 'title', value: 'id' };
   toolbarOptions: string[];
   toolbar: string[];
-  buildings: object;
+  buildings = [];
   settings: any = [];
   buildingID: any;
   glueTypes: any;
@@ -153,7 +153,7 @@ export class BuildingSettingComponent implements OnInit {
   /// end api
   async loadData() {
     try {
-      this.buildings = await this.getBuildingForSetting();
+      this.buildings = await this.getBuildingForSetting() as [];
       this.glueTypes = ((await this.getAllGlueType()) as []).filter( (item: any) => item.level === 1);
     } catch (error) {
       this.alertify.error(error + '');

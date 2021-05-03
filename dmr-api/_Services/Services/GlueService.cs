@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using DMR_API.SignalrHub;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Http;
+using CodeUtility;
 
 namespace DMR_API._Services.Services
 {
@@ -58,13 +59,19 @@ namespace DMR_API._Services.Services
             _repoGlueIngredient = repoGlueIngredient;
         }
 
-
+        private static Random random = new Random();
+        public static string RandomString(int length)
+        {
+            const string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            return new string(Enumerable.Repeat(chars, length)
+              .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
         private async Task<string> GenatateGlueCode(string code)
         {
             int lenght = 8;
             if (await _repoGlue.FindAll().AnyAsync(x => x.Code.Equals(code)) == true)
             {
-                var newCode = CodeUtility.RandomString(lenght);
+                var newCode = RandomString(lenght);
                 return await GenatateGlueCode(newCode);
             }
             return code;

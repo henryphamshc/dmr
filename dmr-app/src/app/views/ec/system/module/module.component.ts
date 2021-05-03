@@ -14,11 +14,13 @@ export class ModuleComponent extends BaseComponent implements OnInit {
   module: any;
   data: any = [];
   @ViewChild('grid') grid: GridComponent;
+
   pageSettings = { pageCount: 20, pageSizes: true, pageSize: 10 };
   fieldsPermissionType: object = { text: 'name', value: 'name' };
   filterSettings = { type: 'Excel' };
   permissionTypeData: object;
   permissionTypeID: any;
+  languages: any;
   constructor(
     private permissionService: PermissionService,
     private alertify: AlertifyService,

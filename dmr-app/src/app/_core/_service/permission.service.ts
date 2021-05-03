@@ -4,6 +4,7 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { UtilitiesService } from './utilities.service';
+import { INavData } from '@coreui/angular';
 @Injectable({
   providedIn: 'root'
 })
@@ -82,9 +83,47 @@ export class PermissionService {
   // #endregion
 
   getMenuByUserPermission(userId) {
-    return this.http.get<[]>(this.baseUrl + 'Permission/GetMenuByUserPermission/' + userId, {}).pipe(map(response => {
-      const menus = response;
-      return menus;
+    return this.http.get<[]>(this.baseUrl + 'Permission/GetMenuByUserPermission/' + userId, {})
+    .pipe(map(response => {
+      const menus = response as any[];
+      const navs: INavData[] = [
+        {
+          name: 'Home',
+          url: '/',
+          icon: 'icon-home',
+          badge: {
+            variant: 'info',
+            text: ''
+          }
+        },
+        {
+          title: true,
+          name: 'Mixing Room'
+        },
+      ];
+      for (const item of menus) {
+        const children = [];
+        const node = {
+          name: item.module,
+          url: item.url,
+          icon: item.icon || "icon-star",
+          children: []
+        };
+        for (const child of item?.children) {
+          const itemChild = {
+            name: child.name,
+            url: child.url,
+            icon: "far fa-circle"
+            // icon: item.icon || 'fa fa-circle'
+          };
+          children.push(itemChild);
+        }
+        node.children = children;
+        navs.push(node);
+      }
+      console.log(navs);
+      localStorage.setItem('navs', JSON.stringify(navs));
+      return navs;
     }));
   }
 
@@ -102,5 +141,57 @@ export class PermissionService {
   }
   getScreenFunctionAndAction(roleID) {
     return this.http.get<[]>(this.baseUrl + 'Permission/GetScreenFunctionAndAction/' + roleID, { });
+  }
+
+  // language
+  getAllLanguage() {
+    return this.http.get<[]>(this.baseUrl + 'Permission/getAllLanguage', {});
+  }
+  getModulesAsTreeView() {
+    return this.http.get<[]>(this.baseUrl + 'Permission/GetModulesAsTreeView', {});
+  }
+  getMenuByLangID(userID, langID) {
+    return this.http.get<[]>(`${this.baseUrl}Permission/GetMenuByLangID?userID=${userID}&langID=${langID}` , {})
+      .pipe(map(response => {
+        const menus = response as any[];
+        const navs: INavData[] = [
+          {
+            name: 'Home',
+            url: '/',
+            icon: 'icon-home',
+            badge: {
+              variant: 'info',
+              text: ''
+            }
+          },
+          {
+            title: true,
+            name: 'Mixing Room'
+          },
+        ];
+        for (const item of menus) {
+          const children = [];
+          const node = {
+            name: item.module,
+            url: item.url,
+            icon: item.icon || "icon-star",
+            children: []
+          };
+          for (const child of item?.children) {
+            const itemChild = {
+              name: child.name,
+              url: child.url,
+              icon: "far fa-circle"
+              // icon: item.icon || 'fa fa-circle'
+            };
+            children.push(itemChild);
+          }
+          node.children = children;
+          navs.push(node);
+        }
+        console.log(navs);
+        localStorage.setItem('navs', JSON.stringify(navs));
+        return navs;
+      }));
   }
 }

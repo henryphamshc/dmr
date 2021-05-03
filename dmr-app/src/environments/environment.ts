@@ -6,11 +6,11 @@ const SYSTEM_CODE = 3;
 export const environment = {
   production: false,
   systemCode: SYSTEM_CODE,
-  apiUrlEC: 'http://10.4.4.224:1009/api/',
+  apiUrlEC: 'http://10.4.4.224:1010/api/',
   apiUrl: 'http://10.4.5.174:108/api/',
   apiUrl2: 'http://10.4.5.174:108/api/',
-  hub: 'http://10.4.4.224:1009/ec-hub',
-  scalingHub: 'http://10.4.4.224:1009/ec-hub',
+  hub: 'http://10.4.4.224:1010/ec-hub',
+  scalingHub: 'http://10.4.4.224:1010/ec-hub',
   scalingHubLocal: 'http://localhost:5001/scalingHub',
   mqtt: {
     server: 'localhost',

@@ -17,6 +17,7 @@ using System.Transactions;
 using dmr_api.Models;
 using DMR_API._Repositories;
 using Microsoft.AspNetCore.Http;
+using CodeUtility;
 
 namespace DMR_API._Services.Services
 {
@@ -68,7 +69,13 @@ namespace DMR_API._Services.Services
             _toDoListService = toDoListService;
             this._repoMixingInfoDetail = _repoMixingInfoDetail;
         }
-
+        private static Random random = new Random();
+        public static string RandomString(int length)
+        {
+            const string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            return new string(Enumerable.Repeat(chars, length)
+              .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
         public MixingInfo Mixing(MixingInfoForCreateDto mixing)
         {
 
@@ -76,13 +83,13 @@ namespace DMR_API._Services.Services
             {
                 try
                 {
-                    string code = CodeUtility.RandomString(8);
+                    string code = RandomString(8);
                     while (true)
                     {
                         var checkExistingCode = _repoMixingInfor.FindAll(x => x.Code == code).Any();
                         if (checkExistingCode is true)
                         {
-                            code = CodeUtility.RandomString(8);
+                            code = RandomString(8);
                         }
                         else
                         {
@@ -336,13 +343,13 @@ namespace DMR_API._Services.Services
                     var checmicalA = glue.GlueIngredients.FirstOrDefault().Ingredient.ExpiredTime;
                     mixingInfo.CreatedTime = DateTime.Now;
                     mixingInfo.ExpiredTime = DateTime.Now.AddHours(checmicalA);
-                    string code = CodeUtility.RandomString(8);
+                    string code = RandomString(8);
                     while (true)
                     {
                         var checkExistingCode = _repoMixingInfor.FindAll(x => x.Code == code).Any();
                         if (checkExistingCode is true)
                         {
-                            code = CodeUtility.RandomString(8);
+                            code = RandomString(8);
                         }
                         else
                         {

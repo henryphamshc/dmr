@@ -71,6 +71,9 @@ namespace DMR_API.Data
         public DbSet<Models.Version> Versions { get; set; }
         public DbSet<Models.Module> Modules { get; set; }
         public DbSet<Models.StirRawData> StirRawData { get; set; }
+        public DbSet<ModuleTranslation> ModuleTranslations { get; set; }
+        public DbSet<FunctionTranslation> FunctionTranslations { get; set; }
+        public DbSet<Language> Languages { get; set; }
 
         public DbSet<ActionInFunctionSystem> ActionInFunctionSystem { get; set; }
 

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using CodeUtility;
 using dmr_api.Models;
 using DMR_API._Repositories.Interface;
 using DMR_API._Services.Interface;
@@ -485,17 +486,23 @@ namespace DMR_API._Services.Services
             response.DispatcherDetail(data, dispatchListDoneTotal, todoDispatchTotal, delayDispatchTotal, dispatchTotal);
             return response;
         }
-
+        private static Random random = new Random();
+        public static string RandomString(int length)
+        {
+            const string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            return new string(Enumerable.Repeat(chars, length)
+              .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
         private async Task<string> GenatateCode(string code)
         {
             int lenght = 8;
             if (code.IsNullOrEmpty())
             {
-                code = CodeUtility.RandomString(lenght);
+                code = RandomString(lenght);
             }
             if (await _subpackageRepository.FindAll().AnyAsync(x => x.Code.Equals(code)) == true)
             {
-                var newCode = CodeUtility.RandomString(lenght);
+                var newCode = RandomString(lenght);
                 return await GenatateCode(newCode);
             }
             return code;
@@ -506,11 +513,11 @@ namespace DMR_API._Services.Services
             int lenght = 8;
             if (code.IsNullOrEmpty())
             {
-                code = CodeUtility.RandomString(lenght);
+                code = RandomString(lenght);
             }
             if (await _mixingInfoRepository.FindAll().AnyAsync(x => x.Code.Equals(code)) == true)
             {
-                var newCode = CodeUtility.RandomString(lenght);
+                var newCode = RandomString(lenght);
                 return await GenatateCodeForMixingInfo(newCode);
             }
             return code;

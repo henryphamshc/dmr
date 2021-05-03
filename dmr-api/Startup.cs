@@ -30,9 +30,9 @@ namespace DMR_API
         {
             var appsettings = Configuration.GetSection("Appsettings").Get<Appsettings>();
 
-            services.AddDatabaseExention(Configuration)
-                    .AddRepositoriesExention()
-                    .AddServicesExention();
+            services.AddDatabaseExtention(Configuration)
+                    .AddRepositoriesExtention()
+                    .AddServicesExtention();
             services.AddStackExchangeRedisCache(options =>
             {
                 options.Configuration = "localhost";
@@ -46,7 +46,7 @@ namespace DMR_API
                     .AddNewtonsoftJson(options =>
                                     {
                                         options.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Unspecified;
-                                        options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                                        options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                                     });
             services.AddCors(options =>
             {
@@ -59,13 +59,13 @@ namespace DMR_API
             });
             services.AddTransient<DbInitializer>();
             //Auto Mapper
-            services.AddAutoMapperExention();
+            services.AddAutoMapperExtention();
 
-            services.AddAuthenticationWithSwaggerExention(Configuration);
+            services.AddAuthenticationWithSwaggerExtention(Configuration);
 
-            services.AddHttpClientExention(Configuration);
+            services.AddHttpClientExtention(Configuration);
 
-            services.AddShedulerExention(Configuration);
+            services.AddShedulerExtention(Configuration);
 
             services.AddSpaStaticFiles(configuration =>
             {
@@ -89,7 +89,7 @@ namespace DMR_API
             // specifying the Swagger JSON endpoint.
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Electronic Scale");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Digital mixing room system");
             });
             app.UseCors("CorsPolicy");
             app.UseCors(x => x
@@ -122,7 +122,7 @@ namespace DMR_API
                 spa.Options.SourcePath = @"wwwroot/ClientApp";
                 //if (env.IsDevelopment())
                 //{
-                //    spa.Options.SourcePath = @"../dmr-spa";
+                //    spa.Options.SourcePath = @"../dmr-app";
                 //    spa.UseAngularCliServer(npmScript: "start");
                 //}
             });

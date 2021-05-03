@@ -19,6 +19,7 @@ using OfficeOpenXml.Style;
 using System.Drawing;
 using Microsoft.AspNetCore.Http;
 using dmr_api.Models;
+using CodeUtility;
 
 namespace DMR_API._Services.Services
 {
@@ -3207,7 +3208,7 @@ namespace DMR_API._Services.Services
             .DistinctBy(x => x.BuildingID)
             .ToList();
 
-            var lineTotal = model.Count();
+            var lineTotal = lines.Count();
             var planTotal = model.Where(x=> x.ToDoList.Count() > 0 || x.DispatchList.Count() > 0
                                          && x.UpdatedTime.Value.Date == today 
                                          && x.CreatedDate.Date == today).Count();
@@ -3240,7 +3241,7 @@ namespace DMR_API._Services.Services
                 .DistinctBy(x => x.BuildingID)
                 .ToList();
 
-                var lineTotal = model.Count();
+                var lineTotal = lines.Count();
                 var planTotal = model.Where(x => x.ToDoList.Count() > 0 || x.DispatchList.Count() > 0
                                              && x.UpdatedTime.Value.Date == today
                                              && x.CreatedDate.Date == today).Count();

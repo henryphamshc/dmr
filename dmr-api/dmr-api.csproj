@@ -64,5 +64,11 @@
     <Folder Include="Params\" />
     <Folder Include="publish\" />
     <Folder Include="wwwroot\ClientApp\" />
+    <Folder Include="wwwroot\ClientApp\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="CodeUtility">
+      <HintPath>..\..\..\..\a_2021\CodeUtility\CodeUtility\bin\Release\netcoreapp3.1\CodeUtility.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

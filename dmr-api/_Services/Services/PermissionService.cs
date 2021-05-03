@@ -11,6 +11,10 @@ using DMR_API._Services.Interface;
 using DMR_API.DTO;
 using DMR_API.Models;
 using Microsoft.EntityFrameworkCore;
+using CodeUtility.TreeExtension.Model;
+using CodeUtility.TreeExtension;
+using CodeUtility;
+using DMR_API._Repositories.Repositories;
 
 namespace DMR_API._Services.Services
 {
@@ -23,17 +27,23 @@ namespace DMR_API._Services.Services
         private readonly IActionRepository _repoAction;
         private readonly IModuleRepository _repoModule;
         private readonly IRoleRepository _repoRole;
+        private readonly ILanguageRepository _repoLanguage;
+        private readonly IModuleTranslationRepository _repoModuleTranslation;
+        private readonly IFunctionTranslationRepository _repoFunctionTranslation;
         private readonly IFunctionSystemRepository _repoFunctionSystem;
         private readonly IActionInFunctionSystemRepository _repoActionInFunctionSystem;
         private readonly IUserRoleRepository _repoUserRole;
         private readonly MapperConfiguration _configMapper;
-        private readonly string[] Permissions = new string [] {"Action", "Action In Function", "Module", "Function"};
+        private readonly string[] Permissions = new string[] { "Action", "Action In Function", "Module", "Function" };
         public PermissionService(
             IPermissionRepository repoPermission,
             IMapper mapper,
             IActionRepository repoAction,
             IModuleRepository repoModule,
             IRoleRepository repoRole,
+            ILanguageRepository repoLanguage,
+            IModuleTranslationRepository repoModuleTranslation,
+            IFunctionTranslationRepository repoFunctionTranslation,
             IFunctionSystemRepository repoFunctionSystem,
             IActionInFunctionSystemRepository repoActionInFunctionSystem,
             IUserRoleRepository repoUserRole,
@@ -44,6 +54,9 @@ namespace DMR_API._Services.Services
             _repoAction = repoAction;
             _repoModule = repoModule;
             _repoRole = repoRole;
+            _repoLanguage = repoLanguage;
+            _repoModuleTranslation = repoModuleTranslation;
+            _repoFunctionTranslation = repoFunctionTranslation;
             _repoFunctionSystem = repoFunctionSystem;
             _repoActionInFunctionSystem = repoActionInFunctionSystem;
             _repoUserRole = repoUserRole;
@@ -103,13 +116,28 @@ namespace DMR_API._Services.Services
             throw new NotImplementedException();
         }
 
-        public async Task<ResponseDetail<object>> UpdateModule(Module module)
+        public async Task<ResponseDetail<object>> UpdateModule(ModuleDto moduleDto)
         {
-            _repoModule.Update(module);
+
             try
             {
-                var result = await _repoModule.SaveAll();
-                return new ResponseDetail<object> { Status = result };
+                if (moduleDto.Level == 1)
+                {
+                    var module = _mapper.Map<Module>(moduleDto);
+                    _repoModule.Update(module);
+                    var result = await _repoModule.SaveAll();
+
+                }
+                else
+                {
+                    var translation = await _repoModuleTranslation.FindAll(x => x.ModuleID == moduleDto.ID && x.LanguageID == moduleDto.Translation.LanguageID).FirstOrDefaultAsync();
+                    translation.Name = moduleDto.Translation.Name;
+                    translation.LanguageID = moduleDto.Translation.LanguageID;
+                    _repoModuleTranslation.Update(translation);
+                    var result = await _repoModule.SaveAll();
+                }
+
+                return new ResponseDetail<object> { Status = true };
             }
             catch (System.Exception ex)
             {
@@ -120,10 +148,15 @@ namespace DMR_API._Services.Services
 
         public async Task<ResponseDetail<object>> DeleteModule(int moduleID)
         {
-            var module = await _repoModule.FindAll(x => x.ID == moduleID).FirstOrDefaultAsync();
-            _repoModule.Remove(module);
+            var module = await _repoModule.FindAll(x => x.ID == moduleID)
+                .Include(x => x.ModuleTranslations).FirstOrDefaultAsync();
             try
             {
+                if (module.ModuleTranslations.Count > 0)
+                {
+                    _repoModuleTranslation.Remove(module.ModuleTranslations);
+                }
+                _repoModule.Remove(module);
                 var result = await _repoModule.SaveAll();
                 return new ResponseDetail<object> { Status = result };
             }
@@ -133,14 +166,25 @@ namespace DMR_API._Services.Services
             }
         }
 
-        public async Task<ResponseDetail<object>> AddModule(Module module)
+        public async Task<ResponseDetail<object>> AddModule(ModuleDto moduleDto)
         {
-            module.CreatedTime = DateTime.Now;
-            _repoModule.Add(module);
+
             try
             {
-                var result = await _repoModule.SaveAll();
-                return new ResponseDetail<object> { Status = result };
+                if (moduleDto.Level == 1)
+                {
+                    var module = _mapper.Map<Module>(moduleDto);
+                    module.CreatedTime = DateTime.Now;
+                    _repoModule.Add(module);
+                    var result = await _repoModule.SaveAll();
+                }
+                else
+                {
+                    var item = moduleDto.Translation;
+                    _repoModuleTranslation.Add(new ModuleTranslation(item.ID, item.Name, item.LanguageID));
+                    await _repoModuleTranslation.SaveAll();
+                }
+                return new ResponseDetail<object> { Status = true };
             }
             catch (System.Exception ex)
             {
@@ -148,13 +192,20 @@ namespace DMR_API._Services.Services
             }
         }
 
-        public async Task<ResponseDetail<object>> UpdateFunction(FunctionSystem module)
+        public async Task<ResponseDetail<object>> UpdateFunction(FunctionDto functionDto)
         {
-            _repoFunctionSystem.Update(module);
+
             try
             {
-                var result = await _repoFunctionSystem.SaveAll();
-                return new ResponseDetail<object> { Status = result };
+                var function = _mapper.Map<FunctionSystem>(functionDto);
+                _repoFunctionSystem.Update(function);
+                var translation = await _repoFunctionTranslation.FindAll(x => x.FunctionSystemID == function.ID && x.LanguageID == functionDto.Translation.LanguageID).FirstOrDefaultAsync();
+                translation.Name = functionDto.Translation.Name;
+                translation.LanguageID = functionDto.Translation.LanguageID;
+                _repoFunctionTranslation.Update(translation);
+
+                await _repoFunctionSystem.SaveAll();
+                return new ResponseDetail<object> { Status = true };
             }
             catch (System.Exception ex)
             {
@@ -164,10 +215,13 @@ namespace DMR_API._Services.Services
 
         public async Task<ResponseDetail<object>> DeleteFunction(int functionID)
         {
-            var module = await _repoFunctionSystem.FindAll(x => x.ID == functionID).FirstOrDefaultAsync();
-            _repoFunctionSystem.Remove(module);
+
             try
             {
+                var function = await _repoFunctionSystem.FindAll(x => x.ID == functionID)
+              .Include(x => x.FunctionTranslations).FirstOrDefaultAsync();
+                _repoModuleTranslation.Remove(function.FunctionTranslations);
+                _repoFunctionSystem.Remove(function);
                 var result = await _repoFunctionSystem.SaveAll();
                 return new ResponseDetail<object> { Status = result };
             }
@@ -178,13 +232,17 @@ namespace DMR_API._Services.Services
 
         }
 
-        public async Task<ResponseDetail<object>> AddFunction(FunctionSystem module)
+        public async Task<ResponseDetail<object>> AddFunction(FunctionDto functionDto)
         {
-            _repoFunctionSystem.Add(module);
             try
             {
-                var result = await _repoFunctionSystem.SaveAll();
-                return new ResponseDetail<object> { Status = result };
+                var function = _mapper.Map<FunctionSystem>(functionDto);
+                _repoFunctionSystem.Add(function);
+                await _repoFunctionSystem.SaveAll();
+                var item = functionDto.Translation;
+                _repoFunctionTranslation.Add(new FunctionTranslation(item.ID, item.Name, item.LanguageID));
+                await _repoFunctionSystem.SaveAll();
+                return new ResponseDetail<object> { Status = true };
             }
             catch (System.Exception ex)
             {
@@ -237,16 +295,55 @@ namespace DMR_API._Services.Services
 
         public async Task<List<Models.Action>> GetAllAction() => await _repoAction.FindAll().ToListAsync();
 
-        public async Task<IEnumerable<HierarchyNode<FunctionSystem>>> GetFunctionsAsTreeView()
+        public async Task<IEnumerable<HierarchyNode<FunctionSystem>>> GetFunctionsAsTreeViewV1()
         {
             var model = (await _repoFunctionSystem.FindAll().Include(x => x.Module).Include(x => x.Function).OrderBy(x => x.ID).OrderBy(x => x.ModuleID).ThenBy(x => x.Sequence).ToListAsync()).AsHierarchy(x => x.ID, y => y.ParentID);
             return model;
         }
 
+        public async Task<IEnumerable<HierarchyNode<FunctionTreeDto>>> GetFunctionsAsTreeView()
+        {
+            var parents = (await _repoFunctionSystem.FindAll()
+                .Include(x => x.Module)
+                .Include(x => x.FunctionTranslations)
+                .OrderBy(x => x.ID)
+                .OrderBy(x => x.ModuleID)
+                .ThenBy(x => x.Sequence)
+                .ToListAsync())
+                .Select(x => new HierarchyNode<FunctionTreeDto>
+                {
+                    Entity = new FunctionTreeDto
+                    {
+                        ID = x.ID + "_parent",
+                        Name = x.Name,
+                        Code = x.Code,
+                        Icon = x.Icon,
+                        Url = x.Url,
+                        ModuleID = x.ModuleID,
+                        ModuleName = x.Module.Name,
+                        LanguageID = "",
+                        ParentID = "",
+                    },
+                    ChildNodes = x.FunctionTranslations != null ? x.FunctionTranslations.Select(x => new HierarchyNode<FunctionTreeDto>
+                    {
+                        Entity = new FunctionTreeDto
+                        {
+                            ID = x.ID + "_child",
+                            Name = x.Name,
+                            LanguageID = x.LanguageID,
+                            ParentID = x.FunctionSystemID + "_parent"
+                        },
+                    }).ToList() : new List<HierarchyNode<FunctionTreeDto>>()
+                })
+                .ToList();
+
+            return parents;
+        }
         public async Task<object> GetMenuByUserPermission(int userId)
         {
             var roles = await _repoUserRole.FindAll(x => x.UserID == userId).Select(x => x.RoleID).ToArrayAsync();
-            var query = from f in _repoFunctionSystem.FindAll().Include(x => x.Module)
+            var query = from f in _repoFunctionSystem.FindAll()
+                                    .Include(x => x.Module)
                         join p in _repoPermission.FindAll()
                             on f.ID equals p.FunctionSystemID
                         join r in _repoRole.FindAll() on p.RoleID equals r.ID
@@ -272,6 +369,49 @@ namespace DMR_API._Services.Services
             return data.GroupBy(x => x.Module).Select(x => new
             {
                 Module = x.Key.Name,
+                Icon = x.Key.Icon,
+                Url = x.Key.Url,
+                Sequence = x.Key.Sequence,
+                Children = x,
+                HasChildren = x.Any()
+            }).OrderBy(x => x.Sequence).ToList();
+        }
+
+        public async Task<object> GetMenuByLangID(int userId, string langID)
+        {
+            var roles = await _repoUserRole.FindAll(x => x.UserID == userId).Select(x => x.RoleID).ToArrayAsync();
+
+            var query = from p in _repoPermission.FindAll()
+                        join f in _repoFunctionTranslation.FindAll(x => x.LanguageID.Equals(langID))
+                                .Include(x => x.FunctionSystem)
+                                .ThenInclude(x => x.Module)
+                                .ThenInclude(x => x.ModuleTranslations)
+                        on p.FunctionSystemID equals f.FunctionSystemID
+                        join r in _repoRole.FindAll() on p.RoleID equals r.ID
+                        join a in _repoAction.FindAll()
+                            on p.ActionID equals a.ID
+                        where roles.Contains(r.ID) && a.Code == "VIEW"
+                        select new
+                        {
+                            Id = f.ID,
+                            Name = f.Name,
+                            Code = f.FunctionSystem.Code,
+                            Url = f.FunctionSystem.Url,
+                            Icon = f.FunctionSystem.Icon,
+                            ParentId = f.FunctionSystem.ParentID,
+                            SortOrder = f.FunctionSystem.Sequence,
+                            Module = f.FunctionSystem.Module,
+                            ModuleId = f.FunctionSystem.ModuleID
+                        };
+            var data = await query.Distinct()
+                .OrderBy(x => x.ParentId)
+                .ThenBy(x => x.SortOrder)
+                .ToListAsync();
+            return data.GroupBy(x => x.Module).Select(x => new
+            {
+                Module = x.Key.ModuleTranslations.Count > 0 ?
+                x.Key.ModuleTranslations.FirstOrDefault(x => x.LanguageID.Equals(langID)).Name
+                : x.Key.Name,
                 Icon = x.Key.Icon,
                 Url = x.Key.Url,
                 Sequence = x.Key.Sequence,
@@ -378,25 +518,28 @@ namespace DMR_API._Services.Services
             var data = await query.ToListAsync();
             return data;
         }
-        public async Task<object> GetActionInFunctionByRoleID(int roleID) {
+        public async Task<object> GetActionInFunctionByRoleID(int roleID)
+        {
             var query = _repoPermission.FindAll(x => x.RoleID == roleID)
-                .Include(x=> x.Functions)
-                .Include(x=> x.Action)
-                .Select(x => new {
+                .Include(x => x.Functions)
+                .Include(x => x.Action)
+                .Select(x => new
+                {
                     x.Functions.Name,
                     FunctionCode = x.Functions.Code,
                     x.Functions.Url,
                     x.Action.Code,
                     x.ActionID
                 });
-                var data = (await query.ToListAsync()).GroupBy(x => new {x.Name, x.FunctionCode, x.Url})
-                        .Select(x => new {
-                            x.Key.Name,
-                            x.Key.FunctionCode,
-                            x.Key.Url,
-                            Childrens = x
-                        });
-                return data;
+            var data = (await query.ToListAsync()).GroupBy(x => new { x.Name, x.FunctionCode, x.Url })
+                    .Select(x => new
+                    {
+                        x.Key.Name,
+                        x.Key.FunctionCode,
+                        x.Key.Url,
+                        Childrens = x
+                    });
+            return data;
         }
         public async Task<object> GetScreenFunctionAndAction(ScreenFunctionAndActionRequest request)
         {
@@ -418,14 +561,16 @@ namespace DMR_API._Services.Services
                     ModuleCode = x.FunctionSystem.Module.Code,
                     ModuleNameID = x.FunctionSystem.Module.ID,
                     Code = x.Action.Code,
-                })
-                .Where(x => !Permissions.Contains(x.FunctionCode)); // Dieu kien nay de khong load nhung chuc nang he thong
-          var model =  from t1 in query
-                        from t2 in permission.Where(x => roleID.Contains(x.RoleID) && t1.Id == x.FunctionSystemID && x.ActionID== t1.ActionID)
+                });
+                //.Where(x => !Permissions.Contains(x.FunctionCode)); 
+            // Dieu kien nay de khong load nhung chuc nang he thong
+            var model = from t1 in query
+                        from t2 in permission.Where(x => roleID.Contains(x.RoleID) && t1.Id == x.FunctionSystemID && x.ActionID == t1.ActionID)
                             .DefaultIfEmpty()
-                        select new {
+                        select new
+                        {
                             t1.Id,
-                            t1.Name ,
+                            t1.Name,
                             t1.ActionName,
                             t1.ActionID,
                             t1.Code,
@@ -465,7 +610,43 @@ namespace DMR_API._Services.Services
                                 Child = "childrens"
                             }
                         });
-            return data.OrderBy(x=>x.Sequence).ToList();
+            return data.OrderBy(x => x.Sequence).ToList();
+        }
+
+        public async Task<List<Language>> GetAllLanguage()
+        {
+            return await _repoLanguage.FindAll().ToListAsync();
+        }
+
+        public async Task<object> GetModulesAsTreeView()
+        {
+            var model = (await _repoModule.FindAll()
+                .Include(x => x.ModuleTranslations)
+                .OrderBy(x => x.Sequence).ToListAsync())
+                .Select(x => new ModuleTreeDto
+                {
+                    ID = x.ID + "_parent",
+                    Name = x.Name,
+                    Icon = x.Icon,
+                    Url = x.Url,
+                    Sequence = x.Sequence,
+                    ParentID = "",
+                    LanguageID = "",
+                    Level = 1,
+                    ChildNodes = x.ModuleTranslations != null ? x.ModuleTranslations.Select(a => new ModuleTreeDto
+                    {
+                        ID = a.ID + "_child",
+                        Name = a.Name,
+                        Icon = x.Icon,
+                        Url = x.Url,
+                        Sequence = x.Sequence,
+                        ParentID = a.ModuleID + "_parent",
+                        LanguageID = a.LanguageID,
+                        Level = 2
+                    }).ToList() : new List<ModuleTreeDto>()
+                }).ToList();
+
+            return model;
         }
     }
 }

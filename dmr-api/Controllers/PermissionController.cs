@@ -48,7 +48,12 @@ namespace DMR_API.Controllers
             var result = await _permissionService.GetAllModule();
             return Ok(result);
         }
-
+        [HttpGet("GetModulesAsTreeView")]
+        public async Task<IActionResult> GetModulesAsTreeView()
+        {
+            var result = await _permissionService.GetModulesAsTreeView();
+            return Ok(result);
+        }
         [HttpGet("GetAllAction")]
         public async Task<IActionResult> GetAllAction()
         {
@@ -65,7 +70,7 @@ namespace DMR_API.Controllers
 
 
         [HttpPost("CreateModule")]
-        public async Task<IActionResult> CreateModule(Module create)
+        public async Task<IActionResult> CreateModule(ModuleDto create)
         {
 
             var result = await _permissionService.AddModule(create);
@@ -78,7 +83,7 @@ namespace DMR_API.Controllers
         }
 
         [HttpPut("UpdateModule")]
-        public async Task<IActionResult> UpdateModule(Module update)
+        public async Task<IActionResult> UpdateModule(ModuleDto update)
         {
             var result = await _permissionService.UpdateModule(update);
             if (result.Status)
@@ -97,7 +102,7 @@ namespace DMR_API.Controllers
 
 
         [HttpPost("CreateFunction")]
-        public async Task<IActionResult> CreateFunction(FunctionSystem create)
+        public async Task<IActionResult> CreateFunction(FunctionDto create)
         {
             var result = await _permissionService.AddFunction(create);
             if (result.Status)
@@ -109,7 +114,7 @@ namespace DMR_API.Controllers
         }
 
         [HttpPut("UpdateFunction")]
-        public async Task<IActionResult> UpdateFunction(FunctionSystem update)
+        public async Task<IActionResult> UpdateFunction(FunctionDto update)
         {
             var result = await _permissionService.UpdateFunction(update);
             if (result.Status)
@@ -202,6 +207,23 @@ namespace DMR_API.Controllers
             //create new permission list from user changed
 
             var result = await _permissionService.GetScreenAction(functionID);
+            return Ok(result);
+        }
+        [HttpGet("GetAllLanguage")]
+        public async Task<IActionResult> GetAllLanguage()
+        {
+            //create new permission list from user changed
+
+            var result = await _permissionService.GetAllLanguage();
+            return Ok(result);
+        }
+
+        [HttpGet("GetMenuByLangID")]
+        public async Task<IActionResult> GetMenuByLangID([FromQuery]int userID, [FromQuery] string langID)
+        {
+            //create new permission list from user changed
+
+            var result = await _permissionService.GetMenuByLangID(userID, langID);
             return Ok(result);
         }
         [HttpPost("GetScreenFunctionAndAction")]
