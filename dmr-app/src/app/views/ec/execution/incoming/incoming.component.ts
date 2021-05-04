@@ -69,18 +69,18 @@ export class IncomingComponent implements OnInit, OnDestroy, AfterViewInit {
     private cdr: ChangeDetectorRef
   ) {
   }
- receiveMessage(isShow) {
+  receiveMessage(isShow) {
     const newEvent = isShow;
     if (newEvent !== this.isShow) {
-    if (isShow === true) {
-      this.spinner.show();
-      console.log('this.isShow === true', isShow, new Date().toISOString());
-      this.isShow = true;
+      if (isShow === true) {
+        this.spinner.show();
+        // console.log('this.isShow === true', isShow, new Date().toISOString());
+        this.isShow = true;
 
-    } else if (isShow === false) {
-      console.log('this.isShow === false', isShow);
-      this.isShow = false;
-      this.spinner.hide();
+      } else if (isShow === false) {
+        // console.log('this.isShow === false', isShow);
+        this.isShow = false;
+        this.spinner.hide();
       }
     }
     // const newEvent = isShow;
@@ -103,7 +103,7 @@ export class IncomingComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscription.forEach(item => item.unsubscribe());
   }
   public ngOnInit(): void {
-    this.subscription.push(this.subjectSpinner.pipe(debounceTime(50)).subscribe( async (show) => {
+    this.subscription.push(this.subjectSpinner.pipe(debounceTime(50)).subscribe(async (show) => {
       // if (show === true) {
       //   console.log('this.isShow === true', show);
       //   this.isShow = true;
@@ -191,6 +191,7 @@ export class IncomingComponent implements OnInit, OnDestroy, AfterViewInit {
     });
     this.toggleColor = !this.toggleColor;
   }
+
   private checkQRCode() {
     this.subscription.push(this.subject
       .pipe(debounceTime(500))
@@ -198,9 +199,14 @@ export class IncomingComponent implements OnInit, OnDestroy, AfterViewInit {
         // const commonPattern = /(\d+)-(\w+)-([\w\-\d]+)/g;
         const dateAndBatch = /(\d+)-(\w+)-/g;
         const validFormat = res.QRCode.match(dateAndBatch);
+        const array = [];
+        for (const item of res.QRCode.split('    ')) {
+          array.push(item);
+        }
         // Update 08/04/2021 - Leo
         const input = res.QRCode.split('    ') || [];
-        const qrcode = input[2].split(":")[1].trim() + ':' + input[0].split(":")[1].trim();
+        const qrcode = input[2].split(":")[1].trim() + ':' + input[0].split(":")[1].trim().replace(' ', '').toUpperCase();
+        console.log(qrcode);
         // End Update
 
         // const qrcode = res.QRCode.replace(validFormat[0], '');
@@ -220,14 +226,6 @@ export class IncomingComponent implements OnInit, OnDestroy, AfterViewInit {
               building: this.buildingName,
               userid: userID
             };
-            // this.ingredientService.scanQRCodeFromChemicalWareHouse(res.QRCode, this.buildingName, userID).subscribe((status: any) => {
-            //   if (status === true) {
-            //     this.getAllIngredientInfoByBuilding();
-            //     const count = this.findInputedIngredient(qrcode);
-            //     this.showPopupWindow(count, chemical);
-            //   }
-            // });
-
 
             this.ingredientService.scanQRCodeFromChemicalWareHouseV1(model).subscribe((status: any) => { // Update 08/04/2021 - Leo
               if (status === true) {
@@ -247,15 +245,6 @@ export class IncomingComponent implements OnInit, OnDestroy, AfterViewInit {
               building: this.buildingName,
               userid: userID
             };
-            // this.ingredientService.scanQRCodeOutput(res.QRCode, this.buildingName, userID).subscribe((status: any) => {
-            //   if (status === true) {
-            //     this.getAllIngredientInfoOutputByBuilding();
-            //     const count = this.findOutputedIngredient(qrcode);
-            //     this.showPopupWindow(count, chemical);
-            //   } else {
-            //     this.alertify.error(status.message);
-            //   }
-            // });
 
             this.ingredientService.scanQRCodeOutputV1(model).subscribe((status: any) => { // Update 08/04/2021 - Leo
               if (status === true) {
@@ -337,7 +326,7 @@ export class IncomingComponent implements OnInit, OnDestroy, AfterViewInit {
   getAllIngredient() {
     this.ingredientService.getAllIngredient().subscribe((res: any) => {
       this.ingredients = res;
-      console.log('Global Ingerdient: ', res);
+      // console.log('Global Ingerdient: ', res);
     });
   }
 

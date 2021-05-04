@@ -2,9 +2,9 @@
   <div class="col-md-12">
     <div class="card">
       <div class="card-header">
-        <h5 class="card-title">Action List</h5>
+        <h5 class="card-title">Version List</h5>
       </div>
-      <ejs-grid #grid (actionBegin)="actionBegin($event)" gridLines='Both' (actionComplete)="actionComplete($event)"
+      <ejs-grid #grid id="grid" (actionBegin)="actionBegin($event)" gridLines='Both' (actionComplete)="actionComplete($event)"
         [toolbar]='toolbarOptions' [dataSource]='data' allowPaging='true' [allowSorting]='true' allowResizing='true'
         showColumnMenu='true' [allowExcelExport]='true' allowFiltering='true' [filterSettings]='filterSettings'
         [pageSettings]='pageSettings' (toolbarClick)='toolbarClick($event)' [editSettings]='editSettings'>

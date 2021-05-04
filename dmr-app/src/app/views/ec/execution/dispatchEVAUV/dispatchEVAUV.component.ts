@@ -61,8 +61,7 @@ export class DispatchEVAUVComponent implements OnInit {
         this.alertify.warning('Vui lòng nhập KL còn lại nhỏ hơn hoặc bằng khối lượng!');
         args.cancel = true;
         return;
-      }
-      else if (data.amount - data.remainingAmount === 0) {
+      } else if (data.amount - data.remainingAmount === 0) {
         this.alertify.warning('Vui lòng nhập số lượng còn lại bằng 0.!');
         args.cancel = true;
         return;
