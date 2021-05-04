@@ -98,10 +98,9 @@ export class DefaultLayoutComponent implements OnInit, AfterViewInit {
       translate.setDefaultLang('vi');
       translate.use('vi');
     }
-    this.authenticationService.user$.subscribe(x => {
-      this.userName = x.username;
-      this.userID = x.id;
-    });
+    const user = JSON.parse(localStorage.getItem("user")).user;
+    this.userName = user.username;
+    this.userID = user.id;
   }
   toggleMinimize(e) {
     this.sidebarMinimized = e;
@@ -156,13 +155,14 @@ export class DefaultLayoutComponent implements OnInit, AfterViewInit {
   }
 
   getMenu() {
-    if (localStorage.getItem('navs') === null) {
+    const navs = JSON.parse(localStorage.getItem('navs'));
+    if (navs === null) {
       this.spinner.show();
       console.log('Header ------- Begin getMenuByUserPermission');
       const langID = localStorage.getItem('lang');
-      this.permissionService.getMenuByLangID(this.userid, langID).subscribe((navs: []) => {
-        this.navItems = navs;
-        localStorage.setItem('navs', JSON.stringify(navs));
+      this.permissionService.getMenuByLangID(this.userid, langID).subscribe((navsData: []) => {
+        this.navItems = navsData;
+        localStorage.setItem('navs', JSON.stringify(navsData));
         this.spinner.hide();
 
       }, (err) => {
@@ -170,10 +170,8 @@ export class DefaultLayoutComponent implements OnInit, AfterViewInit {
       });
       console.log('Header ------- end getMenuByUserPermission');
     } else {
-      setTimeout(() => {
-        console.log('Header ------- Begin getlocalstore menu');
-        this.navItems = JSON.parse(localStorage.getItem('navs'));
-      });
+      console.log('Header ------- Begin getlocalstore menu');
+      this.navItems = navs;
     }
   }
   home() {

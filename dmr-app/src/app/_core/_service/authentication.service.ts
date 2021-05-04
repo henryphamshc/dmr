@@ -84,7 +84,7 @@ export class AuthenticationService implements OnDestroy {
           window.location.reload();
         }
       }
-      if (event.key === 'menus') {
+      if (event.key === 'navs') {
         if (JSON.stringify(event.oldValue) !== JSON.stringify(event.newValue)) {
           this.logOut();
           window.location.reload();

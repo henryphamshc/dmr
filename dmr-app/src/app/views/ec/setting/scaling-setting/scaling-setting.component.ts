@@ -30,7 +30,7 @@ export class ScalingSettingComponent implements OnInit {
   qrcode: string;
   toolbar: string[];
   unit: any;
-  units = [{ value: 'k', text: 'Kilogram' }, { value: 'g', text: 'Gram' }];
+  units: any;
   machine: any;
   WeighingScale30KG = 0;
   WeighingScale3KG = 1;
@@ -43,6 +43,7 @@ export class ScalingSettingComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.units = [{ value: 'k', text: 'Kilogram' }, { value: 'g', text: 'Gram' }];
     this.filterSettings = { type: 'Excel' };
     this.toolbar = ['Excel Export', 'Search'];
     this.loadData();

@@ -76,7 +76,7 @@
               </ng-template>
             </e-column>
 
-            <e-column field='startTime' editType='timepickeredit' format='HH:mm' textAlign='Center'
+            <e-column field='startTime' textAlign='Center'
               headerText='Start Time' width='120'>
               <ng-template #template let-data>
                 {{data.startTime | date: 'HH:mm'}}
@@ -88,7 +88,7 @@
               </ng-template>
             </e-column>
 
-            <e-column field='endTime' editType='timepickeredit' format='HH:mm' textAlign='Center' headerText='End Time'
+            <e-column field='endTime' textAlign='Center' headerText='End Time'
               width='120'>
               <ng-template #template let-data>
                 {{data.endTime | date: 'HH:mm'}}
@@ -165,7 +165,7 @@
               </ng-template>
             </e-column>
 
-            <e-column field='startTime' editType='timepickeredit' format='HH:mm' textAlign='Center'
+            <e-column field='startTime' textAlign='Center'
               headerText='Start Time' width='120'>
               <ng-template #template let-data>
                 {{data.startTime | date: 'HH:mm'}}
@@ -177,7 +177,7 @@
               </ng-template>
             </e-column>
 
-            <e-column field='endTime' editType='timepickeredit' format='HH:mm' textAlign='Center' headerText='End Time'
+            <e-column field='endTime' textAlign='Center' headerText='End Time'
               width='120'>
               <ng-template #template let-data>
                 {{data.endTime | date: 'HH:mm'}}

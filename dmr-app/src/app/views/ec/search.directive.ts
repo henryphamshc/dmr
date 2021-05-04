@@ -12,6 +12,7 @@ export class SearchDirective implements AfterViewInit, OnInit, OnDestroy {
   regexStr = '^[a-zA-Z0-9_]*$';
   isShow: boolean;
   @Output() messageEvent = new EventEmitter<boolean>();
+  lastValue: boolean;
   @HostListener('focus') onFocus() {
     setTimeout(() => {
       this.host.nativeElement.select();
@@ -25,13 +26,15 @@ export class SearchDirective implements AfterViewInit, OnInit, OnDestroy {
   @HostListener('ngModelChange', ['$event']) onChange(value) {
     this.isShow = true;
     this.messageEvent.emit(true);
+    // console.log(value);
     this.subject.next(value);
   }
   @HostListener('document:keydown', ['$event']) onKeyDown(event: KeyboardEvent) {
-    if (event.keyCode === 13 || event.keyCode === 17 || event.keyCode === 74) {
+    if (event.keyCode === 74 || event.keyCode === 9) {
       event.preventDefault();
     }
   }
+
   constructor(private host: ElementRef) { }
   ngAfterViewInit() {
     // document.addEventListener('keydown', (event) => {
@@ -45,15 +48,15 @@ export class SearchDirective implements AfterViewInit, OnInit, OnDestroy {
   }
   ngOnInit() {
     this.subscription.push(this.subject
-    .pipe(
-      debounceTime(50)
+      .pipe(
+        debounceTime(50)
       )
       .subscribe(async (args) => {
-      this.host.nativeElement.select();
-      console.log(args);
-      this.messageEvent.emit(false);
-      this.isShow = false;
-    }));
+        this.host.nativeElement.select();
+        // console.log(args);
+        this.messageEvent.emit(false);
+        this.isShow = false;
+      }));
   }
   ngOnDestroy() {
     this.subscription.forEach(item => item.unsubscribe());
@@ -62,11 +65,11 @@ export class SearchDirective implements AfterViewInit, OnInit, OnDestroy {
   onKeydownHandler(event: KeyboardEvent) {
     event.preventDefault();
     this.host.nativeElement.value = this.host.nativeElement.value + '    ';
+    this.host.nativeElement.value = this.host.nativeElement.value.replaceAll('    ' || '          ', '    ');
   }
 
   @HostListener('document:keydown.tab', ['$event'])
   onKeydownTabHandler(event: KeyboardEvent) {
     event.preventDefault();
-    this.host.nativeElement.value = this.host.nativeElement.value + '    ';
   }
 }

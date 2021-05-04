@@ -66,7 +66,6 @@ namespace DMR_API.Data
         public DbSet<KindType> KindType { get; set; }
 
         public DbSet<Models.Permission> Permisions { get; set; }
-
         public DbSet<Models.Action> Actions { get; set; }
         public DbSet<Models.Version> Versions { get; set; }
         public DbSet<Models.Module> Modules { get; set; }

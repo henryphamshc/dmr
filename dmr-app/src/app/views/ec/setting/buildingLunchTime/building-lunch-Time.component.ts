@@ -29,7 +29,7 @@ export class BuildingLunchTimeComponent extends BaseComponent implements OnInit 
   buildingID: number;
   userData: any;
   buildingUserData: any;
-  buildings: any;
+  buildings: any = [];
   steps = {hour: 1, minute: 30 };
   modalReference: NgbModalRef;
   fields: object = { text: 'content', value: 'content' };

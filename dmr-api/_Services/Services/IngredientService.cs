@@ -287,12 +287,12 @@ namespace DMR_API._Services.Services
         public async Task<object> ScanQRCodeFromChemialWareHouseV1(ScanQrCodeDto entity)
         {
             var results = entity.qrCode.Split("    ");
-            var partNo = results[2].Split(":")[1].Trim() + ':' + results[0].Split(":")[1].Trim();
+            var partNo = results[2].Split(":")[1].Trim() + ':' + results[0].Split(":")[1].Trim().Replace(" ", "").ToUpper();
             var Batch = results[4].Split(":")[1].Trim() + ':' + results[0].Split(":")[1].Trim();
             var model = _repoIngredient.FindAll().FirstOrDefault(x => x.PartNO.Equals(partNo));
             var supModel = _repoSupplier.GetAll();
             var ProductionDates = results[5].Split(":")[1].Trim().ToDateTime();
-            var exp = ProductionDates.AddMonths(3);
+            var exp = results[6].Split(":")[1].Trim().ToDateTime();
             var currentDate = DateTime.Now;
             var data = await CreateIngredientInfo(new IngredientInfo
             {
@@ -388,7 +388,7 @@ namespace DMR_API._Services.Services
             // load tat ca supplier
             var supModel = _repoSupplier.GetAll();
             // lay gia tri "barcode" trong chuỗi qrcode được chuyền lên
-            var partNo = results[2].Split(":")[1].Trim() + ':' + results[0].Split(":")[1].Trim();
+            var partNo = results[2].Split(":")[1].Trim() + ':' + results[0].Split(":")[1].Trim().Replace(" ", "").ToUpper();
             // tim ID của ingredient
             var ingredientID = _repoIngredient.FindAll().FirstOrDefault(x => x.PartNO.Equals(partNo)).ID;
             // Find ingredient theo ingredientID vừa tìm được ở trên

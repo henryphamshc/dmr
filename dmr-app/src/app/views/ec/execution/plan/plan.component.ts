@@ -68,7 +68,7 @@ export class PlanComponent extends BaseComponent implements OnInit, OnDestroy {
   grid: GridComponent;
   dueDate: any;
   modalReference: NgbModalRef;
-  data: [] = [];
+  data: any = [];
   plan: IPlan;
   searchSettings: any = { hierarchyMode: 'Parent' };
   BPFCsForChangeModal: any;
@@ -458,13 +458,11 @@ export class PlanComponent extends BaseComponent implements OnInit, OnDestroy {
       this.modalPlan.finishWorkingTime = data.finishWorkingTime;
       this.modalPlan.startWorkingTime = data.startWorkingTime;
       this.dueDate = data.dueDate;
-      this.modalPlan.startTime =
-      {
+      this.modalPlan.startTime = {
         hour: this.modalPlan.startWorkingTime.getHours(),
         minute: this.modalPlan.startWorkingTime.getMinutes()
       };
-      this.modalPlan.endTime =
-      {
+      this.modalPlan.endTime = {
         hour: this.modalPlan.finishWorkingTime.getHours(),
         minute: this.modalPlan.finishWorkingTime.getMinutes()
       };
@@ -493,13 +491,11 @@ export class PlanComponent extends BaseComponent implements OnInit, OnDestroy {
         this.modalPlan.BPFCEstablishID = args.data.bpfcEstablishID;
         this.modalPlan.BPFCName = args.data.bpfcName;
         this.modalPlan.hourlyOutput = args.data.hourlyOutput;
-        this.modalPlan.startTime =
-        {
+        this.modalPlan.startTime = {
           hour: this.modalPlan.startWorkingTime.getHours(),
           minute: this.modalPlan.startWorkingTime.getMinutes()
         };
-        this.modalPlan.endTime =
-        {
+        this.modalPlan.endTime = {
           hour: this.modalPlan.finishWorkingTime.getHours(),
           minute: this.modalPlan.finishWorkingTime.getMinutes()
         };
@@ -525,13 +521,11 @@ export class PlanComponent extends BaseComponent implements OnInit, OnDestroy {
         this.modalPlan.BPFCEstablishID = this.bpfcID;
         this.modalPlan.BPFCName = args.data.bpfcName;
         this.modalPlan.hourlyOutput = args.data.hourlyOutput || 0;
-        this.modalPlan.startTime =
-        {
+        this.modalPlan.startTime = {
           hour: this.modalPlan.startWorkingTime.getHours(),
           minute: this.modalPlan.startWorkingTime.getMinutes()
         };
-        this.modalPlan.endTime =
-        {
+        this.modalPlan.endTime = {
           hour: this.modalPlan.finishWorkingTime.getHours(),
           minute: this.modalPlan.finishWorkingTime.getMinutes()
         };

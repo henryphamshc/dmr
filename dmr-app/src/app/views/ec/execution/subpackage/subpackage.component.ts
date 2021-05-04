@@ -132,7 +132,7 @@ export class SubpackageComponent implements OnInit, OnDestroy {
       code: string, batch: string
   }> {
     const input = args.QRCode.split('    ') || [];
-    const qrcode = input[2].split(":")[1].trim() + ':' + input[0].split(":")[1].trim();
+    const qrcode = input[2].split(":")[1].trim() + ':' + input[0].split(":")[1].trim().replace(' ', '').toUpperCase();
     const partNO = qrcode;
     this.partNO = partNO;
     this.scanParams = {

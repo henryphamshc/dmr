@@ -160,7 +160,7 @@ export class MixingComponent implements OnInit, OnDestroy {
         // Update 08/04/2021 - Leo
         const input = args.split('    ') || [];
         const qr = item.partNO;
-        const qrcode = input[2].split(":")[1].trim() + ':' + input[0].split(":")[1].trim();
+        const qrcode = input[2].split(":")[1].trim() + ':' + input[0].split(":")[1].trim().replace(' ', '').toUpperCase();
         // const qr = args.match(item.materialNO);
          // End update
         if (qr === null) {

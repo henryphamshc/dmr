@@ -22,20 +22,20 @@ export class AutoSelectDirective implements AfterViewInit, OnInit, OnDestroy {
       this.host.nativeElement.select();
     }, 300);
   }
+  // 74 Ctrl + Enter , 9 tab
+  @HostListener('document:keydown', ['$event']) onKeyDown(event: KeyboardEvent) {
+    if (event.keyCode === 74 || event.keyCode === 9) {
+      event.preventDefault();
+    }
+  }
   @HostListener('ngModelChange', ['$event']) onChange(value) {
     this.subject.next(value);
   }
   constructor(private host: ElementRef ) { }
   ngAfterViewInit() {
-    // tslint:disable-next-line:only-arrow-functions
-    document.addEventListener('keydown', function(event) {
-      if (event.keyCode === 13 || event.keyCode === 17 || event.keyCode === 74) {
-        event.preventDefault();
-      }
-    });
     setTimeout(() => {
       this.host.nativeElement.focus();
-    }, 300);
+    }, 500);
   }
   ngOnInit() {
     this.subscription.push(this.subject
@@ -52,23 +52,12 @@ export class AutoSelectDirective implements AfterViewInit, OnInit, OnDestroy {
   }
   @HostListener('document:keydown.enter', ['$event'])
   onKeydownHandler(event: KeyboardEvent) {
-    console.log('document:keydown.enter');
     event.preventDefault();
     this.host.nativeElement.value = this.host.nativeElement.value + '    ';
+    this.host.nativeElement.value = this.host.nativeElement.value.replaceAll('    ' || '          ', '    ');
   }
   @HostListener('document:keydown.tab', ['$event'])
   onKeydownTabHandler(event: KeyboardEvent) {
-    console.log('document:keydown.tab');
     event.preventDefault();
-    this.host.nativeElement.value = this.host.nativeElement.value + '    ';
-  }
-  @HostListener('document:keydown', ['$event']) keyDown(event: KeyboardEvent) {
-    this.isShow = true;
-    if (event.ctrlKey && (event.keyCode === 13 || event.keyCode === 17 || event.keyCode === 74)) {
-      event.preventDefault();
-    }
-    if (event.altKey) {
-      event.preventDefault();
-    }
   }
 }

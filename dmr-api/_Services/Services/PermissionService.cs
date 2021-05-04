@@ -557,6 +557,7 @@ namespace DMR_API._Services.Services
                     Name = x.FunctionSystem.Name,
                     ActionName = x.Action.Name,
                     ActionID = x.Action.ID,
+                    SequenceFunction = x.FunctionSystem.Sequence,
                     Module = x.FunctionSystem.Module,
                     ModuleCode = x.FunctionSystem.Module.Code,
                     ModuleNameID = x.FunctionSystem.Module.ID,
@@ -575,6 +576,7 @@ namespace DMR_API._Services.Services
                             t1.ActionID,
                             t1.Code,
                             t1.Module,
+                            t1.SequenceFunction,
                             Permission = t2
                         };
             var data = (await model.ToListAsync())
@@ -585,11 +587,12 @@ namespace DMR_API._Services.Services
                             Sequence = x.Key.Sequence,
                             Fields = new
                             {
-                                DataSource = x.GroupBy(s => new { s.Id, s.Name })
+                                DataSource = x.GroupBy(s => new { s.Id, s.Name, s.SequenceFunction })
                                 .Select(g => new
                                 {
                                     Id = g.Key.Id,
                                     Name = g.Key.Name,
+                                    SequenceFunction = g.Key.SequenceFunction,
                                     Childrens = g
                                     .Select(a => new
                                     {
@@ -604,7 +607,7 @@ namespace DMR_API._Services.Services
                                         // IsChecked = permission.Any(p => roleID.Contains(p.RoleID) && a.ActionID == p.ActionID && p.FunctionSystemID == g.Key.Id)
 
                                     }).ToList()
-                                }),
+                                }).OrderBy(x => x.SequenceFunction).ToList(),
                                 Id = "id",
                                 Text = "name",
                                 Child = "childrens"

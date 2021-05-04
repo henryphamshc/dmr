@@ -121,7 +121,7 @@ export class PrintGlueDispatchListComponent implements OnInit, OnDestroy {
   }
   async validateQRCode(args: IScanner): Promise<{ status: boolean; ingredient: any; }> {
     const input = args.QRCode.split('    ') || [];
-    const qrcode = input[2].split(":")[1].trim() + ':' + input[0].split(":")[1].trim();
+    const qrcode = input[2].split(":")[1].trim() + ':' + input[0].split(":")[1].trim().replace(' ', '').toUpperCase();
     this.qrCode = qrcode;
     const result = await this.scanQRCode();
     if (result === null) {
