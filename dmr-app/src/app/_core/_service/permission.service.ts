@@ -12,6 +12,13 @@ export class PermissionService {
   baseUrl = environment.apiUrlEC;
   ModalNameSource = new BehaviorSubject<number>(0);
   currentModalName = this.ModalNameSource.asObservable();
+
+  messageSource = new BehaviorSubject<number>(0);
+  currentMessage = this.messageSource.asObservable();
+  // method này để change source message
+  changeMessage(message) {
+    this.messageSource.next(message);
+  }
   constructor(
     private http: HttpClient, private utilitiesService: UtilitiesService
   ) { }
@@ -43,6 +50,9 @@ export class PermissionService {
   deleteModule(id: number) {
     return this.http.delete(this.baseUrl + 'Permission/DeleteModule/' + id);
   }
+  deleteModuleTranslation(id: number) {
+    return this.http.delete(this.baseUrl + 'Permission/DeleteModuleTranslation/' + id);
+  }
 // #endregion
 
   // #region Function
@@ -60,6 +70,9 @@ export class PermissionService {
   }
   deleteFunction(id: number) {
     return this.http.delete(this.baseUrl + 'Permission/DeleteFunction/' + id);
+  }
+  deleteFunctionTranslation(id: number) {
+    return this.http.delete(this.baseUrl + 'Permission/DeleteFunctionTranslation/' + id);
   }
   getActionInFunctionByRoleID(id: number) {
     return this.http.get(this.baseUrl + 'Permission/GetActionInFunctionByRoleID/' + id);

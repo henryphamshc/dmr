@@ -1,3 +1,5 @@
+import { Modulev2AddEditComponent } from './modulev2/modulev2-add-edit/modulev2-add-edit.component';
+import { FunctionAddEditComponent } from './function/function-add-edit/function-add-edit.component';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import { ActionFunctionComponent } from './action-function/action-function.component';
 import { ActionComponent } from './action/action.component';
@@ -126,6 +128,8 @@ if (lang === 'vi') {
     Modulev2Component,
     ActionFunctionComponent,
     VersionComponent,
+    FunctionAddEditComponent,
+    Modulev2AddEditComponent,
     VersionAddComponent
   ]
 })
@@ -142,7 +146,7 @@ export class SystemModule {
     } else {
       defaultLang = 'en';
       setTimeout(() => {
-        L10n.load(require('../../../../assets/ej2-lang/en-US.json'));
+        L10n.load(require('../../../../assets/ej2-lang/en.json'));
         setCulture('en');
       });
     }

@@ -414,6 +414,7 @@ export class TodolistComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
   EVA_UVList() {
+    this.spinner.show();
     this.bottomFactoryService.EVAUVList(this.buildingID).subscribe((res: any) => {
       this.EVAUVData = res.data;
       this.todoTotal = res.todoTotal;
@@ -427,9 +428,11 @@ export class TodolistComponent implements OnInit, OnDestroy, AfterViewInit {
       this.delayDispatchTotal = res.delayDispatchTotal;
       this.doneDispatchTotal = res.doneDispatchTotal;
       this.percentageOfDoneDispatch = res.percentageOfDoneDispatch;
-    });
+      this.spinner.hide();
+    }, err => this.spinner.hide());
   }
   dispatchList() {
+    this.spinner.show();
     this.todolistService.dispatchList(this.buildingID).subscribe((res: any) => {
       this.dispatchData = res.data;
       this.todoTotal = res.todoTotal;
@@ -443,9 +446,11 @@ export class TodolistComponent implements OnInit, OnDestroy, AfterViewInit {
       this.delayDispatchTotal = res.delayDispatchTotal;
       this.doneDispatchTotal = res.doneDispatchTotal;
       this.percentageOfDoneDispatch = res.percentageOfDoneDispatch;
-    });
+      this.spinner.hide();
+    }, err => this.spinner.hide());
   }
   dispatchListDelay() {
+    this.spinner.show();
     this.todolistService.dispatchListDelay(this.buildingID).subscribe((res: any) => {
       this.dispatchData = res.data;
       this.todoTotal = res.todoTotal;
@@ -459,9 +464,11 @@ export class TodolistComponent implements OnInit, OnDestroy, AfterViewInit {
       this.delayDispatchTotal = res.delayDispatchTotal;
       this.doneDispatchTotal = res.doneDispatchTotal;
       this.percentageOfDoneDispatch = res.percentageOfDoneDispatch;
-    });
+      this.spinner.hide();
+    }, err => this.spinner.hide());
   }
   todo() {
+    this.spinner.show();
     this.todolistService.todo(this.buildingID).subscribe(res => {
       this.data = res.data;
       this.todoTotal = res.todoTotal;
@@ -475,7 +482,8 @@ export class TodolistComponent implements OnInit, OnDestroy, AfterViewInit {
       this.delayDispatchTotal = res.delayDispatchTotal;
       this.doneDispatchTotal = res.doneDispatchTotal;
       this.percentageOfDoneDispatch = res.percentageOfDoneDispatch;
-    });
+      this.spinner.hide();
+    }, err => this.spinner.hide());
   }
   todoAddition() {
     this.todolistService.todoAddition(this.buildingID).subscribe(res => {
@@ -514,6 +522,7 @@ export class TodolistComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
   delay() {
+    this.spinner.show();
     this.todolistService.delay(this.buildingID).subscribe(res => {
       this.data = res.data;
       this.todoTotal = res.todoTotal;
@@ -528,9 +537,11 @@ export class TodolistComponent implements OnInit, OnDestroy, AfterViewInit {
 
       this.doneDispatchTotal = res.doneDispatchTotal;
       this.percentageOfDoneDispatch = res.percentageOfDoneDispatch;
-    });
+      this.spinner.hide();
+    }, err => this.spinner.hide());
   }
   done() {
+    this.spinner.show();
     this.todolistService.done(this.buildingID).subscribe(res => {
       this.doneData = res.data;
       this.todoTotal = res.todoTotal;
@@ -544,7 +555,8 @@ export class TodolistComponent implements OnInit, OnDestroy, AfterViewInit {
       this.doneDispatchTotal = res.doneDispatchTotal;
       this.delayDispatchTotal = res.delayDispatchTotal;
       this.percentageOfDoneDispatch = res.percentageOfDoneDispatch;
-    });
+      this.spinner.hide();
+    }, err => this.spinner.hide());
   }
   gridConfig(): void {
     this.pageSettings = { pageCount: 20, pageSizes: true, pageSize: 10 };

@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ChangeEvent } from '@ckeditor/ckeditor5-angular';
@@ -56,7 +57,8 @@ export class VersionAddComponent implements OnInit {
     id: number,
     description: string,
     name: string,
-    uploadBy: string
+    uploadBy: string,
+    createdTime: string,
   };
   name: string;
   uploadBy: string;
@@ -67,6 +69,7 @@ export class VersionAddComponent implements OnInit {
   constructor(
     private versionService: VersionService,
     private alertify: AlertifyService,
+    private datePipe: DatePipe,
     private router: Router,
     private route: ActivatedRoute,
   ) { }
@@ -81,6 +84,7 @@ export class VersionAddComponent implements OnInit {
         id: this.Id,
         description: '',
         name: '',
+        createdTime: '',
         uploadBy: ''
       };
     } else {
@@ -100,6 +104,7 @@ export class VersionAddComponent implements OnInit {
       id: 0,
       description: this.description,
       name: this.name,
+      createdTime: this.datePipe.transform(new Date, "YYYY-MM-dd HH:mm:ss"),
       uploadBy: this.uploadBy
     };
     this.versionService.create(this.version).subscribe(() => {
@@ -115,7 +120,8 @@ export class VersionAddComponent implements OnInit {
       id: 0,
       description: this.description,
       name: this.name,
-      uploadBy: this.uploadBy
+      uploadBy: this.uploadBy,
+      createdTime: this.datePipe.transform(new Date, "YYYY-MM-dd HH:mm:ss")
     };
   }
   edit() {
@@ -123,7 +129,8 @@ export class VersionAddComponent implements OnInit {
       id: this.Id,
       description: this.description,
       name: this.name,
-      uploadBy: this.uploadBy
+      uploadBy: this.uploadBy,
+      createdTime: this.version.createdTime
     };
     this.versionService.update(this.version).subscribe(() => {
       this.alertify.success('Update Version Successfully');

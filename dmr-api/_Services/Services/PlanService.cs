@@ -1731,7 +1731,8 @@ namespace DMR_API._Services.Services
                 lines = await _repoBuilding.FindAll(x => x.ParentID == buildingID).Select(x => x.ID).ToListAsync();
             }
             //var buildingGlueModel = await _repoBuildingGlue.FindAll(x => x.CreatedDate.Date >= startDate && x.CreatedDate.Date <= endDate && lines.Contains(x.BuildingID)).Include(x => x.MixingInfo).ToListAsync();
-            var dispatchModel = await _repoDispatch.FindAll(x => x.EstimatedFinishTime.Date >= startDate && x.EstimatedFinishTime.Date <= endDate && lines.Contains(x.LineID)).Include(x => x.MixingInfo).ToListAsync();
+            var dispatchModel = await _repoDispatch.FindAll(x => x.EstimatedFinishTime.Date >= startDate && x.EstimatedFinishTime.Date <= endDate && lines.Contains(x.LineID))
+                .Include(x => x.MixingInfo).ToListAsync();
             var model = await _repoPlan.FindAll()
                  .Include(x => x.BPFCEstablish)
                  .ThenInclude(x => x.Glues)
@@ -1769,7 +1770,7 @@ namespace DMR_API._Services.Services
                 foreach (var glue in item.Glues.Where(x => x.isShow))
                 {
                     var std = glue.Consumption.ToFloat();
-                    var buildingGlue = dispatchModel.FirstOrDefault(x => x.MixingInfo.Glue.GlueNameID.Equals(glue.GlueNameID) && x.EstimatedFinishTime.Date == item.Date && item.BuildingID == x.LineID);
+                    var buildingGlue = dispatchModel.FirstOrDefault(x => x.MixingInfo.GlueNameID.Equals(glue.GlueNameID) && x.EstimatedFinishTime.Date == item.Date && item.BuildingID == x.LineID);
                     var totalConsumption = buildingGlue == null ? 0 : buildingGlue.Amount.ToFloat();
                     var realConsumption = totalConsumption > 0 && item.Quantity > 0 ? Math.Round(totalConsumption / item.Quantity, 2).ToFloat() : 0;
                     var diff = std > 0 && realConsumption > 0 ? Math.Round(realConsumption - std, 2).ToFloat() : 0;

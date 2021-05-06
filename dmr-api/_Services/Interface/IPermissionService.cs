@@ -40,6 +40,8 @@ namespace DMR_API._Services.Interface
         Task<object> GetActionInFunctionByRoleID(int roleID);
         Task<object> GetScreenFunctionAndAction(ScreenFunctionAndActionRequest request);
         Task<List<Language>> GetAllLanguage();
+        Task<ResponseDetail<object>> DeleteFunctionTranslation(int functionTranslationID);
+        Task<ResponseDetail<object>> DeleteModuleTranslation(int moduleTranslationID);
 
     }
 }

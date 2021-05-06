@@ -17,11 +17,12 @@ namespace DMR_API.DTO
         public int Sequence { get; set; }
         public int Level { get; set; }
         public DateTime CreatedTime { get; set; }
-        public Translation Translation { get; set; }
+        public List<Translation> Translations { get; set; }
     }
     public class ModuleTreeDto
     {
-        public string ID { get; set; }
+        public int Index { get; set; }
+        public int ID { get; set; }
         public string Code { get; set; }
         public string Name { get; set; }
         public string Url { get; set; }
@@ -30,7 +31,7 @@ namespace DMR_API.DTO
         public string LanguageID { get; set; }
         public int Sequence { get; set; }
         public int Level { get; set; }
-        public string ParentID { get; set; }
+        public int ParentID { get; set; }
         public DateTime CreatedTime { get; set; }
         public List<ModuleTreeDto> ChildNodes { get; set; } = new List<ModuleTreeDto>();
     }

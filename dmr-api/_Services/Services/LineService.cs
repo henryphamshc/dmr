@@ -23,7 +23,6 @@ namespace DMR_API._Services.Services
             _configMapper = configMapper;
             _mapper = mapper;
             _repoLine = repoBrand;
-
         }
 
         //Thêm Brand mới vào bảng Line

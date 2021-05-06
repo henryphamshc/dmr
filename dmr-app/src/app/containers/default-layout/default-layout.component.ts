@@ -86,18 +86,10 @@ export class DefaultLayoutComponent implements OnInit, AfterViewInit {
     public translate: TranslateService
 
   ) {
+    this.vi = require('../../../assets/ej2-lang/vi.json');
+    this.en = require('../../../assets/ej2-lang/en.json');
     this.role = JSON.parse(localStorage.getItem('level'));
-    const lang = localStorage.getItem('lang');
-    if (lang) {
-      this.value = lang;
-      translate.setDefaultLang(lang);
-      translate.use(lang);
-
-    } else {
-      this.value = 'vi';
-      translate.setDefaultLang('vi');
-      translate.use('vi');
-    }
+    this.value = localStorage.getItem('lang');
     const user = JSON.parse(localStorage.getItem("user")).user;
     this.userName = user.username;
     this.userID = user.id;
@@ -126,8 +118,7 @@ export class DefaultLayoutComponent implements OnInit, AfterViewInit {
       this.data = item;
       this.firstItem = item[0] || {};
     });
-    this.vi = require('../../../assets/ej2-lang/vi.json');
-    this.en = require('../../../assets/ej2-lang/en-US.json');
+
     this.langsData = [{ id: 'vi', name: 'VI' }, { id: 'en', name: 'EN' }];
     this.navAdmin = new Nav().getNavAdmin();
     this.navClient = new Nav().getNavClient();
@@ -183,43 +174,19 @@ export class DefaultLayoutComponent implements OnInit, AfterViewInit {
   }
   onChange(args) {
     this.spinner.show();
+    const lang = args.itemData.id;
+    localStorage.removeItem('lang');
+    localStorage.setItem('lang', lang);
+    this.dataService.setValueLocale(lang);
+    this.permissionService.getMenuByLangID(this.userid, lang).subscribe((navs: []) => {
+      this.navItems = navs;
+      localStorage.setItem('navs', JSON.stringify(navs));
+      this.spinner.hide();
+      window.location.reload();
 
-    if (args.itemData) {
-      localStorage.removeItem('lang');
-      localStorage.setItem('lang', args.itemData.id);
-      this.translate.use(args.itemData.id);
-      if (args.itemData.id === 'vi') {
-        this.dataService.setValueLocale(args.itemData.id);
-        setTimeout(() => {
-          L10n.load(this.vi);
-          setCulture('vi');
-        }, 500);
-        this.permissionService.getMenuByLangID(this.userid, args.itemData.id).subscribe((navs: []) => {
-          this.navItems = navs;
-          localStorage.setItem('navs', JSON.stringify(navs));
-          this.spinner.hide();
-          location.reload();
-
-        }, (err) => {
-          this.spinner.hide();
-        });
-      } else {
-        this.dataService.setValueLocale(args.itemData.id);
-        setTimeout(() => {
-          L10n.load(this.en);
-          setCulture('en-US');
-        }, 500);
-        this.permissionService.getMenuByLangID(this.userid, args.itemData.id).subscribe((navs: []) => {
-          this.navItems = navs;
-          localStorage.setItem('navs', JSON.stringify(navs));
-          this.spinner.hide();
-          location.reload();
-
-        }, (err) => {
-          this.spinner.hide();
-        });
-      }
-    }
+    }, (err) => {
+      this.spinner.hide();
+    });
   }
   getBuilding() {
     const userID = JSON.parse(localStorage.getItem('user')).user.id;

@@ -328,8 +328,6 @@ export class BpfcStatusComponent extends BaseComponent implements OnInit, AfterV
       this.modalNameService.delete(id).subscribe(() => {
         this.getAllBPFCStatus();
         this.alertify.success('Modal Name has been deleted');
-      }, error => {
-        this.alertify.error('Failed to delete the Modal Name');
       });
     });
   }

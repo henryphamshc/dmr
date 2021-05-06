@@ -98,15 +98,15 @@ export class BuildingComponent extends BaseComponent implements OnInit {
       });
   }
   toolbarClick(args) {
-    switch (args.item.text) {
-      case 'Add':
+    switch (args.item.id) {
+      case 'treegrid_gridcontrol_add':
         args.cancel = true;
         this.openMainModal();
         break;
-      case 'PDF Export':
+      case 'treegrid_gridcontrol_pdfexport':
         this.treeGridObj.pdfExport({ hierarchyExportMode: 'All' });
         break;
-      case 'Excel Export':
+      case 'treegrid_gridcontrol_excelexport':
         this.treeGridObj.excelExport({ hierarchyExportMode: 'All' });
         break;
       default:

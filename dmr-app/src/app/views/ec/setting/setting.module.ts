@@ -159,7 +159,7 @@ export class SettingModule {
     } else {
       defaultLang = 'en';
       setTimeout(() => {
-        L10n.load(require('../../../../assets/ej2-lang/en-US.json'));
+        L10n.load(require('../../../../assets/ej2-lang/en.json'));
         setCulture('en');
       });
     }

@@ -18,29 +18,34 @@ export class BasicAuthInterceptor implements HttpInterceptor {
                 }
             });
         }
-        return next.handle(request);
-        // return next.handle(request).pipe(
-        //     retry(1),
-        //     catchError((error: HttpErrorResponse) => {
-        //         let errorMessage = '';
-        //         if (error.error instanceof ErrorEvent) {
-        //             // client-side error
-        //             errorMessage = `Error: ${error.error.message}`;
-        //         } else {
-        //             // server-side error
-        //             errorMessage = `Error Status: ${error.status}\nMessage: ${error.message}`;
-        //             switch (error.status) {
-        //                 case 0: case 500: case 403: case 401:
-        //                 this.authSerive.logOut();
-        //                 this.alertify.error(`Lỗi máy chủ vui lòng tải lại trang (nhấn F5) và chờ trong ít phút!
-        //                 <br> Server Error! Please refresh page (press F5) and wait in a few minutes`, true);
-        //                 return throwError(errorMessage);
-        //                 case 400:
-        //                     return throwError(errorMessage);
-        //             }
-        //         }
-        //         return throwError(errorMessage);
-        //     })
-        // );
+        // return next.handle(request);
+        return next.handle(request).pipe(
+            retry(1),
+            catchError((error: HttpErrorResponse) => {
+                let errorMessage = '';
+                if (error.error instanceof ErrorEvent) {
+                    // client-side error
+                    errorMessage = `Error: ${error.error.message}`;
+                } else {
+                    // server-side error
+                    errorMessage = `Error Status: ${error.status}\nMessage: ${error.message}`;
+                    switch (error.status) {
+                        case 0:
+                        alert(`
+                        Hệ thống không hoạt động vì lỗi mạng. Vui lòng nhấn F5 để thử lại hoặc liên hệ phòng IT.
+                        The system does not work due to network error. Please press F5 to try again or contact IT department!
+                        `);
+                        return throwError(errorMessage);
+                      case 400:
+                        this.alertify.error(error.error || errorMessage);
+                        return throwError(error.error);
+                      case 500:
+                        this.alertify.error("Máy chủ đang gặp vấn đề. Vui lòng thử lại sau!<br> The server error. Please try again after sometime!");
+                        return throwError(error);
+                    }
+                }
+                return throwError(errorMessage);
+            })
+        );
     }
 }

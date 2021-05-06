@@ -226,7 +226,7 @@ namespace DMR_API._Services.Services
             var data = doneList.Concat(dispatchListResult).Where(x => x.PrintTime != null && x.JobType == jobTypeOfTodo || x.FinishDispatchingTime != null && x.JobType == jobTypeOfDispatch).ToList();
             var recaculatetotal = todoTotal + delayTotal + doneTotal + todoDispatchTotal + delayDispatchTotal + doneDispatchTotal;
             response.TodoDetail(data, doneTotal + doneDispatchTotal, todoTotal, delayTotal, recaculatetotal);
-            response.DispatcherDetail(data, 0, todoDispatchTotal, delayDispatchTotal, dispatchTotal);
+            response.DispatcherDetail(data, doneTotal + doneDispatchTotal, todoDispatchTotal, delayDispatchTotal, dispatchTotal);
 
             return response;
 
@@ -373,7 +373,7 @@ namespace DMR_API._Services.Services
             doneTotal = doneTotal + dispatchListDoneTotal;
             response.TodoDetail(data, doneTotal, todoTotal, delayTotal, recaculatetotal);
 
-            response.DispatcherDetail(data, dispatchListDoneTotal, todoDispatchTotal, delayDispatchTotal, dispatchTotal);
+            response.DispatcherDetail(data, doneTotal, todoDispatchTotal, delayDispatchTotal, dispatchTotal);
             return response;
             // return new ToDoListForReturnDto(result.Where(x => x.PrintTime is null).ToList(), doneTotal, todoTotal, delayTotal, total);
         }
@@ -449,7 +449,7 @@ namespace DMR_API._Services.Services
                 doneTotal = doneTotal + dispatchListDoneTotal;
                 response.TodoDetail(data, doneTotal, todoTotal, delayTotal, recaculatetotal);
 
-                response.DispatcherDetail(data, dispatchListDoneTotal, todoDispatchTotal, delayDispatchTotal, dispatchTotal);
+                response.DispatcherDetail(data, doneTotal, todoDispatchTotal, delayDispatchTotal, dispatchTotal);
 
                 return response;
             }

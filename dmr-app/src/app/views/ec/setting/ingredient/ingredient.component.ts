@@ -271,7 +271,7 @@ export class IngredientComponent extends BaseComponent implements OnInit {
     switch (args.item.id) {
       case 'grid_Excel Export':
         let pdfdata;
-        const query = this.ingredientGrid.renderModule.data.generateQuery(); // get grid corresponding query
+        const query = this.ingredientGrid.renderModule.data.generateQuery() as any; // get grid corresponding query
         for (let i = 0; i < query.queries.length; i++) {
           if (query.queries[i].fn === 'onPage') {
             query.queries.splice(i, 1);       // remove page query to get all records

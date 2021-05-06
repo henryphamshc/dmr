@@ -181,7 +181,7 @@ namespace DMR_API.Helpers.Extensions
         {
             services.AddQuartz(async q =>
             {
-                q.SchedulerId = "dmr-api";
+                q.SchedulerId = "DMR_API";
 
                 // Thuc thi luc 6:00, lap lai 1 tieng 1 lan
                 var option = new ReloadTodoJob();
@@ -259,7 +259,7 @@ namespace DMR_API.Helpers.Extensions
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Digital mixing room system", Version = "2.1.1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Digital mixing room system", Version = "3.0.0" });
 
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {

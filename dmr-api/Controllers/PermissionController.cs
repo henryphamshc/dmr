@@ -17,31 +17,17 @@ namespace DMR_API.Controllers
     [ApiController]
     public class PermissionController : ControllerBase
     {
+        #region Ctor
         private readonly IPermissionService _permissionService;
 
         public PermissionController(IPermissionService permissionService)
         {
             _permissionService = permissionService;
-        }
+        } 
+        #endregion
 
-        [HttpGet("GetAllFunction")]
-        public async Task<IActionResult> GetAllFunction()
-        {
-            var result = await _permissionService.GetAllFunction();
-            return Ok(result);
-        }
-        [HttpGet("GetFunctionsAsTreeView")]
-        public async Task<IActionResult> GetFunctionsAsTreeView()
-        {
-            var result = await _permissionService.GetFunctionsAsTreeView();
-            return Ok(result);
-        }
-        [HttpGet("GetMenuByUserPermission/{userId}")]
-        public async Task<IActionResult> GetMenuByUserPermission(int userId)
-        {
-            var result = await _permissionService.GetMenuByUserPermission(userId);
-            return Ok(result);
-        }
+        #region Module
+
         [HttpGet("GetAllModule")]
         public async Task<IActionResult> GetAllModule()
         {
@@ -54,20 +40,6 @@ namespace DMR_API.Controllers
             var result = await _permissionService.GetModulesAsTreeView();
             return Ok(result);
         }
-        [HttpGet("GetAllAction")]
-        public async Task<IActionResult> GetAllAction()
-        {
-            var result = await _permissionService.GetAllAction();
-            return Ok(result);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            var result = await _permissionService.GetAllAsync();
-            return Ok(result);
-        }
-
 
         [HttpPost("CreateModule")]
         public async Task<IActionResult> CreateModule(ModuleDto create)
@@ -90,7 +62,6 @@ namespace DMR_API.Controllers
                 return NoContent();
             return BadRequest($"Updating Module {update.ID} failed on save");
         }
-
         [HttpDelete("DeleteModule/{id}")]
         public async Task<IActionResult> DeleteModule(int id)
         {
@@ -100,7 +71,30 @@ namespace DMR_API.Controllers
             throw new Exception("Error deleting the Module");
         }
 
+        [HttpDelete("DeleteModuleTranslation/{id}")]
+        public async Task<IActionResult> DeleteModuleTranslation(int id)
+        {
+            var result = await _permissionService.DeleteModuleTranslation(id);
+            if (result.Status)
+                return NoContent();
+            throw new Exception("Error deleting the Module Translation");
+        }
+        #endregion
 
+        #region Function
+
+        [HttpGet("GetAllFunction")]
+        public async Task<IActionResult> GetAllFunction()
+        {
+            var result = await _permissionService.GetAllFunction();
+            return Ok(result);
+        }
+        [HttpGet("GetFunctionsAsTreeView")]
+        public async Task<IActionResult> GetFunctionsAsTreeView()
+        {
+            var result = await _permissionService.GetFunctionsAsTreeView();
+            return Ok(result);
+        }
         [HttpPost("CreateFunction")]
         public async Task<IActionResult> CreateFunction(FunctionDto create)
         {
@@ -112,7 +106,6 @@ namespace DMR_API.Controllers
 
             throw new Exception("Creating the Function failed on save");
         }
-
         [HttpPut("UpdateFunction")]
         public async Task<IActionResult> UpdateFunction(FunctionDto update)
         {
@@ -130,8 +123,24 @@ namespace DMR_API.Controllers
                 return NoContent();
             throw new Exception("Error deleting the Function");
         }
+        [HttpDelete("DeleteFunctionTranslation/{id}")]
+        public async Task<IActionResult> DeleteFunctionTranslation(int id)
+        {
+            var result = await _permissionService.DeleteFunctionTranslation(id);
+            if (result.Status)
+                return NoContent();
+            throw new Exception("Error deleting the Function Translation");
+        }
 
+        #endregion
 
+        #region Action
+        [HttpGet("GetAllAction")]
+        public async Task<IActionResult> GetAllAction()
+        {
+            var result = await _permissionService.GetAllAction();
+            return Ok(result);
+        }
 
         [HttpPost("CreateAction")]
         public async Task<IActionResult> CreateAction(Action create)
@@ -163,19 +172,10 @@ namespace DMR_API.Controllers
             throw new Exception("Error deleting the Action");
         }
 
-        [HttpPut("PutPermissionByRoleId/{roleId}")]
-        public async Task<IActionResult> PutPermissionByRoleId(int roleId, [FromBody] UpdatePermissionRequest request)
-        {
-            //create new permission list from user changed
 
-            var result = await _permissionService.PutPermissionByRoleId(roleId, request);
-            if (result.Status)
-            {
-                return NoContent();
-            }
-            return BadRequest("Save permission failed");
-        }
+        #endregion
 
+        #region ActionInFunction
 
         [HttpPost("PostActionToFunction/{functionID}")]
         public async Task<IActionResult> PostActionToFunction(int functionID, ActionAssignRequest request)
@@ -189,8 +189,9 @@ namespace DMR_API.Controllers
             }
             return BadRequest("Save ActionInFunction failed");
         }
+
         [HttpDelete("DeleteActionToFunction/{functionID}")]
-        public async Task<IActionResult> DeleteActionToFunction(int functionID, [FromQuery]ActionAssignRequest request)
+        public async Task<IActionResult> DeleteActionToFunction(int functionID, [FromQuery] ActionAssignRequest request)
         {
             //create new permission list from user changed
 
@@ -201,25 +202,19 @@ namespace DMR_API.Controllers
             }
             return BadRequest("Save ActionInFunction failed");
         }
-        [HttpGet("GetScreenAction/{functionID}")]
-        public async Task<IActionResult> GetScreenAction(int functionID)
-        {
-            //create new permission list from user changed
+        #endregion
 
-            var result = await _permissionService.GetScreenAction(functionID);
-            return Ok(result);
-        }
-        [HttpGet("GetAllLanguage")]
-        public async Task<IActionResult> GetAllLanguage()
-        {
-            //create new permission list from user changed
+        #region Permission
 
-            var result = await _permissionService.GetAllLanguage();
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var result = await _permissionService.GetAllAsync();
             return Ok(result);
         }
 
         [HttpGet("GetMenuByLangID")]
-        public async Task<IActionResult> GetMenuByLangID([FromQuery]int userID, [FromQuery] string langID)
+        public async Task<IActionResult> GetMenuByLangID([FromQuery] int userID, [FromQuery] string langID)
         {
             //create new permission list from user changed
 
@@ -235,10 +230,54 @@ namespace DMR_API.Controllers
             return Ok(result);
         }
         [HttpGet("GetActionInFunctionByRoleID/{roleID}")]
-        public async Task<IActionResult> GetActionInFunctionByRoleID(int roleID) {
+        public async Task<IActionResult> GetActionInFunctionByRoleID(int roleID)
+        {
             var result = await _permissionService.GetActionInFunctionByRoleID(roleID);
             return Ok(result);
         }
+        [HttpGet("GetMenuByUserPermission/{userId}")]
+        public async Task<IActionResult> GetMenuByUserPermission(int userId)
+        {
+            var result = await _permissionService.GetMenuByUserPermission(userId);
+            return Ok(result);
+        }
+
+
+
+        [HttpPut("PutPermissionByRoleId/{roleId}")]
+        public async Task<IActionResult> PutPermissionByRoleId(int roleId, [FromBody] UpdatePermissionRequest request)
+        {
+            //create new permission list from user changed
+
+            var result = await _permissionService.PutPermissionByRoleId(roleId, request);
+            if (result.Status)
+            {
+                return NoContent();
+            }
+            return BadRequest("Save permission failed");
+        }
+
+        [HttpGet("GetScreenAction/{functionID}")]
+        public async Task<IActionResult> GetScreenAction(int functionID)
+        {
+            //create new permission list from user changed
+
+            var result = await _permissionService.GetScreenAction(functionID);
+            return Ok(result);
+        }
+
+        #endregion
+
+        #region Language
+        [HttpGet("GetAllLanguage")]
+        public async Task<IActionResult> GetAllLanguage()
+        {
+            //create new permission list from user changed
+
+            var result = await _permissionService.GetAllLanguage();
+            return Ok(result);
+        }
+        #endregion
     }
 }
 

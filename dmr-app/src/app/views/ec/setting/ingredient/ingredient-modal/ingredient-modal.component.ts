@@ -130,7 +130,6 @@ export class IngredientModalComponent implements OnInit {
       this.ingredientService.changeIngredient(300);
     },
     (error) => {
-      this.alertify.error(error);
       this.genaratorIngredientCode();
     });
   }

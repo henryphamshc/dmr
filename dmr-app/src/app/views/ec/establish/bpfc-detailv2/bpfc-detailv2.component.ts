@@ -631,11 +631,7 @@ export class BpfcDetailV2Component implements OnInit, AfterViewInit, OnDestroy {
               this.glueIngredientDetail = [];
               this.oldDetail = [];
               this.alertify.success('Glue has been deleted');
-            },
-            (error) => {
-              this.alertify.error('Failed to delete the Glue');
-            }
-          );
+            });
         });
       }
     }
@@ -1567,11 +1563,7 @@ export class BpfcDetailV2Component implements OnInit, AfterViewInit, OnDestroy {
           () => {
             this.getGlues();
             this.alertify.success('Đã xóa thành công!');
-          },
-          (error) => {
-            this.alertify.error('Xóa thất bại rồi!');
-          }
-        );
+          });
       }
     );
   }
@@ -1587,11 +1579,7 @@ export class BpfcDetailV2Component implements OnInit, AfterViewInit, OnDestroy {
           () => {
             this.getIngredients();
             this.alertify.success('Đã xóa thành công!');
-          },
-          (error) => {
-            this.alertify.error('Xóa thất bại rồi!');
-          }
-        );
+          });
       }
     );
   }
@@ -1806,7 +1794,6 @@ export class BpfcDetailV2Component implements OnInit, AfterViewInit, OnDestroy {
         this.expiredTime = 0;
       },
       (error) => {
-        this.alertify.error(error);
         this.genaratorGlueCode();
       }
     );
@@ -1929,11 +1916,7 @@ export class BpfcDetailV2Component implements OnInit, AfterViewInit, OnDestroy {
         this.getIngredients();
         this.makeFormula();
         this.alertify.success('Đã xóa thành công!');
-      },
-      (error) => {
-        this.alertify.error('Xóa thất bại rồi!');
-      }
-    );
+      });
   }
   approval() {
     const glueData = this.gridglue.dataSource as any;

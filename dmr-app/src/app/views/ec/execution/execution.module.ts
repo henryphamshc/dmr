@@ -3,7 +3,7 @@ import { CoreDirectivesModule } from './../../../_core/_directive/core.directive
 // Angular
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NgModule } from '@angular/core';
+import { HostListener, NgModule, OnInit } from '@angular/core';
 import { NgxSpinnerModule } from 'ngx-spinner';
 // Components Routing
 import { NgSelectModule } from '@ng-select/ng-select';
@@ -61,7 +61,6 @@ import { FocusDirectivesModule } from 'src/app/_core/_directive/focus.directives
 import { AutoSelectSubpackageDirective } from '../select.subpackage.directive';
 import { AutofocusSubpackageDirective } from '../focus.subpackage.directive';
 declare var require: any;
-let defaultLang: string;
 const lang = localStorage.getItem('lang');
 loadCldr(
   require('cldr-data/supplemental/numberingSystems.json'),
@@ -76,11 +75,7 @@ loadCldr(
   require('cldr-data/main/vi/numbers.json'),
   require('cldr-data/main/vi/timeZoneNames.json'),
   require('cldr-data/supplemental/weekdata.json')); // To load the culture based first day of week
-if (lang === 'vi') {
-  defaultLang = lang;
-} else {
-  defaultLang = 'en';
-}
+
 @NgModule({
   providers: [
     DatePipe
@@ -124,7 +119,7 @@ if (lang === 'vi') {
         useFactory: HttpLoaderFactory,
         deps: [HttpClient]
       },
-      defaultLanguage: defaultLang
+      defaultLanguage: lang
     }),
   ],
   declarations: [
@@ -144,19 +139,15 @@ if (lang === 'vi') {
   ]
 })
 export class ExecutionModule {
-  vi: any;
-  en: any;
   constructor() {
     if (lang === 'vi') {
-      defaultLang = 'vi';
       setTimeout(() => {
         L10n.load(require('../../../../assets/ej2-lang/vi.json'));
         setCulture('vi');
       });
     } else {
-      defaultLang = 'en';
       setTimeout(() => {
-        L10n.load(require('../../../../assets/ej2-lang/en-US.json'));
+        L10n.load(require('../../../../assets/ej2-lang/en.json'));
         setCulture('en');
       });
     }

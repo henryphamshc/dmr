@@ -83,47 +83,46 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.spinner.show();
     this.busy = true;
     try {
-      console.log('Begin authenication');
       await this.authentication();
-      console.log('End authenication');
+      // console.log('End authenication');
 
       this.role = JSON.parse(localStorage.getItem('user')).user.role;
       const userId = JSON.parse(localStorage.getItem('user')).user.id;
-      console.log('Begin getBuildingUserByUserID');
+      // console.log('Begin getBuildingUserByUserID');
 
       const res = await this.authService.getBuildingUserByUserID(userId).toPromise();
-      console.log('end getBuildingUserByUserID', res);
+      // console.log('end getBuildingUserByUserID', res);
 
       localStorage.setItem('building', JSON.stringify(res.data));
       this.authService.setBuildingValue(res.data as IBuilding[]);
 
-      console.log('Begin getRoleByUserID');
+      // console.log('Begin getRoleByUserID');
 
       const roleUser = await this.roleService.getRoleByUserID(userId).toPromise();
       localStorage.setItem('level', JSON.stringify(roleUser));
       this.authService.setRoleValue(roleUser as IRole);
-      console.log('end getRoleByUserID');
+      // console.log('end getRoleByUserID');
 
-      console.log('Begin getMenu', userId);
+      // console.log('Begin getMenu', userId);
 
       const menus = await this.permissionService.getMenuByLangID(userId, 'vi').toPromise();
-      console.log('end nav', menus);
+      // console.log('end nav', menus);
 
       const userRole: IUserRole = {
         isLock: true,
         userID: userId,
         roleID: roleUser.id
       };
-      console.log('Begin isLock');
+      // console.log('Begin isLock');
 
       const isLock = await this.roleService.isLock(userRole).toPromise();
       if (isLock) {
         this.alertifyService.error('Your account has been locked!!!');
         return;
       }
-      console.log('end isLock');
+      // console.log('end isLock');
 
-      console.log('Begin getActionInFunctionByRoleID');
+      // console.log('Begin getActionInFunctionByRoleID');
 
       const functions = await this.permisisonService.getActionInFunctionByRoleID(roleUser.id).toPromise();
       this.functions = functions as FunctionSystem[];
@@ -158,7 +157,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         }
 
       });
-      console.log('end getActionInFunctionByRoleID');
+      // console.log('end getActionInFunctionByRoleID');
       this.alertifyService.success('Login Success!!');
       this.busy = false;
       this.spinner.hide();

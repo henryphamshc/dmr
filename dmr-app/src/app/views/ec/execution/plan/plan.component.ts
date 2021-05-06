@@ -136,7 +136,7 @@ export class PlanComponent extends BaseComponent implements OnInit, OnDestroy {
   buildings: IBuilding[];
   IsAdmin: boolean;
   buildingID: number;
-  period: any;
+  period: any = {};
   planID: number;
   isSTF: boolean;
   lines: [] = [];
@@ -296,7 +296,7 @@ export class PlanComponent extends BaseComponent implements OnInit, OnDestroy {
       case ActionConstant.EXCEL_EXPORT:
         if (lang === 'vi') {
           return [
-            { text: 'Export Excel', tooltipText: 'Export Excel', prefixIcon: 'e-btn-icon fa fa-file-excel-o e-icons e-icon-left', id: 'exportExcel' }
+            { text: 'Xuất Excel', tooltipText: 'Xuất Excel', prefixIcon: 'e-btn-icon fa fa-file-excel-o e-icons e-icon-left', id: 'exportExcel' }
           ];
         }
         return [

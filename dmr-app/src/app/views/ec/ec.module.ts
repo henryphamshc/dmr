@@ -27,7 +27,7 @@ import { DatePickerModule } from '@syncfusion/ej2-angular-calendars';
 import { QRCodeGeneratorAllModule } from '@syncfusion/ej2-angular-barcode-generator';
 import { MaskedTextBoxModule } from '@syncfusion/ej2-angular-inputs';
 import { HttpClient } from '@angular/common/http';
-import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
+import { TranslateModule, TranslateLoader, TranslateService } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
@@ -51,7 +51,6 @@ import { SelectTextDirective } from './select.text.directive';
 import { CoreDirectivesModule } from 'src/app/_core/_directive/core.directives.module';
 
 declare var require: any;
-let defaultLang: string;
 const lang = localStorage.getItem('lang');
 loadCldr(
   require('cldr-data/supplemental/numberingSystems.json'),
@@ -66,11 +65,7 @@ loadCldr(
   require('cldr-data/main/vi/numbers.json'),
   require('cldr-data/main/vi/timeZoneNames.json'),
   require('cldr-data/supplemental/weekdata.json')); // To load the culture based first day of week
-if (lang === 'vi') {
-  defaultLang = lang;
-} else {
-  defaultLang = 'en';
-}
+
 @NgModule({
   imports: [
     QRCodeModule,
@@ -110,7 +105,7 @@ if (lang === 'vi') {
         useFactory: HttpLoaderFactory,
         deps: [HttpClient]
       },
-      defaultLanguage: defaultLang
+      defaultLanguage: lang
     }),
   ],
   declarations: [
@@ -132,18 +127,22 @@ if (lang === 'vi') {
 export class ECModule {
   vi: any;
   en: any;
-  constructor() {
-    if (lang === 'vi') {
-      defaultLang = 'vi';
+  constructor(public translate: TranslateService) {
+    this.vi = require('../../../assets/ej2-lang/vi.json');
+    this.en = require('../../../assets/ej2-lang/en.json');
+    if (lang) {
       setTimeout(() => {
-        L10n.load(require('../../../assets/ej2-lang/vi.json'));
-        setCulture('vi');
+        translate.setDefaultLang(lang);
+        translate.use(lang);
+        L10n.load(lang === 'vi' ? this.vi : this.en);
+        setCulture(lang);
       });
     } else {
-      defaultLang = 'en';
       setTimeout(() => {
-        L10n.load(require('../../../assets/ej2-lang/en-US.json'));
-        setCulture('en');
+        translate.setDefaultLang('vi');
+        translate.use('vi');
+        L10n.load(this.vi);
+        setCulture('vi');
       });
     }
   }

@@ -6,7 +6,7 @@
       </div>
 
       <ejs-treegrid #treeGrid [dataSource]='data' [toolbar]='toolbarOptions' [treeColumnIndex]='1'
-        [editSettings]='editSettingsTree' childMapping='childNodes' (actionComplete)="actionComplete($event)"
+        [editSettings]='editSettingsTree' childMapping='entity.childNodes' (actionComplete)="actionComplete($event)"
         (created)='created()' [allowPaging]='true' [pageSettings]='pageSettings' (actionBegin)="actionBegin($event)"
         gridLines='Both' (rowSelected)="rowSelected($event)">
         <e-columns>
