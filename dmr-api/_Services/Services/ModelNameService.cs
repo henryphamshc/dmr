@@ -200,69 +200,13 @@ namespace DMR_API._Services.Services
             return _mapper.Map<ModelName, ModelNameDto>(_repoModelName.FindById(id));
         }
 
-        public Task<int> GetArticleNameQuantityByModelName(int modelName)
-        {
-
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> CloneModelName(int modelNameID, string modelName, string modelNo, int processID)
-        {
-
-            throw new System.NotImplementedException();
-        }
-
-        public Task<bool> CloneArticleModelname(int modelNameID, string modelName, string modelNo, string article, int processID)
-        {
-
-            throw new System.NotImplementedException();
-        }
-        public Task<object> Approval(int modelNameID, int userid)
-        {
-
-            throw new System.NotImplementedException();
-        }
-
-        public Task<object> Done(int modelNameID, int userid)
-        {
-
-            throw new System.NotImplementedException();
-        }
-
-        public Task<object> Release(int modelNameID, int userid)
-        {
-
-            throw new System.NotImplementedException();
-        }
-
-        public Task<object> Reject(int modelNameID, int userid)
-        {
-
-            throw new System.NotImplementedException();
-        }
-
-        public Task<List<ModelNameDto>> FilterByApprovedStatus()
-        {
-
-            throw new System.NotImplementedException();
-        }
-
-        public Task<List<ModelNameDto>> FilterByNotApprovedStatus()
-        {
-
-            throw new System.NotImplementedException();
-        }
+     
         private static Random random = new Random();
         public static string RandomString(int length)
         {
             const string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             return new string(Enumerable.Repeat(chars, length)
               .Select(s => s[random.Next(s.Length)]).ToArray());
-        }
-        public Task<List<ModelNameDto>> FilterByFinishedStatus()
-        {
-
-            throw new System.NotImplementedException();
         }
 
         public async Task SendMailForPIC(string email)
@@ -279,27 +223,8 @@ namespace DMR_API._Services.Services
             await _mailExtension.SendEmailRangeAsync(emails, subject, message);
         }
 
-        public Task<bool> ImportExcel(List<ModelNameForImportExcelDto> modelNameForImportExcelDtos)
-        {
-
-            throw new System.NotImplementedException();
-        }
-
-        public Task<List<ModelNameDto>> GetModelNameForBPFCRecord(Status status, string startBuildingDate, string endBuildingDate)
-        {
-
-            throw new System.NotImplementedException();
-
-
-        }
-        //Lấy toàn bộ danh sách Brand 
-        public Task<List<ModelNameDtoForBPFCSchedule>> GetAllModelNameForBPFCSchedule()
-        {
-
-            // return new List<ModelNameDtoForBPFCSchedule>();
-            throw new System.NotImplementedException();
-
-        }
+      
+       
 
         public async Task<bool> CloneModelName(int modelNameID, int modelNOID, int articleNOID, int processID)
         {

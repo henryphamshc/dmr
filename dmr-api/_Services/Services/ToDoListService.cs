@@ -158,6 +158,11 @@ namespace DMR_API._Services.Services
 
         public async Task<ToDoListForReturnDto> Done(int buildingID)
         {
+            // Lấy tất cả nhiệm vụ đã hoàn thành, nhiệm vụ đã giao theo quyền hạn
+
+            // Nhiệm vụ thì chỉ có hóa chất chưa nhiều keo phân biệt bằng (" + ")
+
+            // Nếu TG hiện tại là buổi sáng -> lấy buổi sáng, ngược lại lấy cả ngày
             var response = new ToDoListForReturnDto();
             var userID = _jwtService.GetUserID();
             var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
@@ -176,18 +181,20 @@ namespace DMR_API._Services.Services
 
             var result = MapToTodolistDto(model);
             // filter by middle of the day
+            // Nếu TG hiện tại là buổi sáng -> lấy buổi sáng, ngược lại lấy cả ngày
             if (value == morning)
                 result = result.Where(x => x.EstimatedStartTime.TimeOfDay <= start.TimeOfDay).ToList();
 
             // dispatch
             // map to dto
+            // Lấy những nhiệm vụ đã giao
             var dispatchListModel = await _repoDispatchList.FindAll(x =>
               x.IsDelete == false
               && x.EstimatedStartTime.Date == currentDate
               && x.EstimatedFinishTime.Date == currentDate
               && x.BuildingID == buildingID)
            .ToListAsync();
-
+            // Theo quyền hạn. Nếu không chia buildingUser thì load hết chuyền, ngược lại load theo buildingUser
             var lines = await _repoBuildingUser.FindAll().Include(x => x.Building).Where(x => x.Building.ParentID == buildingID).Select(x => x.BuildingID).ToListAsync();
             if (lines.Count > 0)
             {
@@ -205,6 +212,7 @@ namespace DMR_API._Services.Services
             if (value == morning)
                 dispatchListResult = dispatchListResult.Where(x => x.EstimatedStartTime.TimeOfDay <= start.TimeOfDay).ToList();
 
+            // Lấy số tổng các loại nhiệm vụ
             // decentralzation
             var EVA_UVTotal = result.Where(x => x.IsEVA_UV).Count();
             var dispatchTotal = dispatchListResult.Count();
@@ -300,6 +308,11 @@ namespace DMR_API._Services.Services
 
         public async Task<ToDoListForReturnDto> Delay(int buildingID)
         {
+            // Lấy tất cả nhiệm vụ trễ, nhiệm vụ giao keo bị trễ theo quyền hạn
+
+            // Nhiệm vụ thì chỉ có hóa chất chưa nhiều keo phân biệt bằng (" + ")
+
+            // Nếu TG hiện tại là buổi sáng -> lấy buổi sáng, ngược lại lấy cả ngày
             var userID = _jwtService.GetUserID();
             var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
             var currentTime = DateTime.Now.ToLocalTime();
@@ -380,6 +393,11 @@ namespace DMR_API._Services.Services
 
         public async Task<ToDoListForReturnDto> ToDo(int buildingID)
         {
+            // Lấy tất cả nhiệm vụ phải làm, nhiệm vụ giao keo phải làm theo quyền hạn
+
+            // Nhiệm vụ thì chỉ có hóa chất chưa nhiều keo phân biệt bằng (" + ")
+
+            // Nếu TG hiện tại là buổi sáng -> lấy buổi sáng, ngược lại lấy cả ngày
             try
             {
                 var userID = _jwtService.GetUserID();
@@ -697,6 +715,8 @@ namespace DMR_API._Services.Services
         // Pha them (Addition)
         public async Task<ToDoListForReturnDto> ToDoAddition(int buildingID)
         {
+            // Lấy tất cả nhiệm vụ đã làm và cần làm
+
             try
             {
                 var userID = _jwtService.GetUserID();
