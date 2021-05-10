@@ -2108,7 +2108,7 @@ export class Bpfc1Component implements OnInit, AfterViewInit {
   }
   getModelNoByModelNameIDClone(modelNameID) {
     this.modelNoService
-      .getModelNoByModelNameID(modelNameID)
+      .getModelNoByModelNameID(modelNameID || 0)
       .subscribe((res: any) => {
         this.modelNOsDataClone = res;
       });
@@ -2134,7 +2134,7 @@ export class Bpfc1Component implements OnInit, AfterViewInit {
         this.getArtProcessByArticleNoID(this.articleNoID);
         this.clearFormClone();
       } else {
-        this.alertify.error('The BPFC exists!');
+        this.alertify.error(res.message);
       }
     });
   }

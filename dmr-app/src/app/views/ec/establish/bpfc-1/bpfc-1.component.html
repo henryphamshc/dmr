@@ -198,7 +198,7 @@
         </ul>
         <div class="row">
           <div class="col-lg-12 col-xs-12 col-12" style="text-align: center;">
-            <button type="button" (click)="sortBySup(0)" class="btn bg-gradient-secondary btn-sm rounded-pill">
+            <button type="button" (click)="sortBySup(0)" class="btn btn-secondary btn-sm rounded-pill">
               {{ 'DEFAULT' | translate}}
             </button>
             <button type="button" *ngFor="let item of supplier" style="margin: 3px" (click)="sortBySup(item.id)"

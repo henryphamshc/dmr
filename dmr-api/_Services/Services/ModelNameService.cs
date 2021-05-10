@@ -114,12 +114,12 @@ namespace DMR_API._Services.Services
                 var artNo = await FindArticleNoByCloneDto(clone);
                 clone.ArticleNOID = artNo.ID;
                 var artProcess = await FindArtProcessByCloneDto(clone);
-                var bpfcForClone = await FindBPFCByCloneDto(clone, artProcess);
+                var bpfcForClone = await FindBPFCDestination(clone, artProcess);
                 // Not exists bpfc -> add new -> clone 
                 if (bpfcForClone == null)
                 {
                     clone.ApprovalBy = bpfc.ApprovalBy;
-                    var bpfcClone = await CreateNewBPFCByCloneDto(clone, artProcess.ID);
+                    var bpfcClone = await CreateNewBPFCDestination(clone, artProcess.ID);
                     await CloneNewGlueByCloneDto(clone, bpfc, bpfcClone);
                 }
                 else
@@ -398,28 +398,28 @@ namespace DMR_API._Services.Services
             return code;
 
         }
-        private async Task<bool> CheckExistBPFC(CloneDto clone)
+        private async Task<bool> CheckExistBPFC(CloneDto model)
         {
-            var bpfc = await _repoBPFC.FindAll().AnyAsync(x => x.ModelNameID == clone.ModelNameID
-                                 && x.ModelNoID == clone.ModelNOID
-                                 && x.ArticleNoID == clone.ArticleNOID
-                                 && x.ArtProcessID == clone.ArtProcessID);
+            var bpfc = await _repoBPFC.FindAll().AnyAsync(x => x.ModelNameID == model.ModelNameID
+                                 && x.ModelNoID == model.ModelNOID
+                                 && x.ArticleNoID == model.ArticleNOID
+                                 && x.ArtProcessID == model.ArtProcessID);
             return bpfc;
         }
-        public async Task<BPFCEstablish> CreateNewBPFCByCloneDto(CloneDto clone, int artProcessID)
+        public async Task<BPFCEstablish> CreateNewBPFCDestination(CloneDto model, int artProcessID)
         {
 
             var bpfcData = new BPFCEstablish();
-            bpfcData.ModelNameID = clone.ModelNameID;
-            bpfcData.ModelNoID = clone.ModelNOID;
+            bpfcData.ModelNameID = model.ModelNameID;
+            bpfcData.ModelNoID = model.ModelNOID;
 
-            bpfcData.ArticleNoID = clone.ArticleNOID;
+            bpfcData.ArticleNoID = model.ArticleNOID;
             bpfcData.ArtProcessID = artProcessID;
 
             bpfcData.ApprovalStatus = false;
             bpfcData.FinishedStatus = false;
-            bpfcData.ApprovalBy = clone.ApprovalBy;
-            bpfcData.CreatedBy = clone.CloneBy;
+            bpfcData.ApprovalBy = model.ApprovalBy;
+            bpfcData.CreatedBy = model.CloneBy;
             bpfcData.UpdateTime = DateTime.Now;
             bpfcData.BuildingDate = DateTime.Now;
             bpfcData.CreatedDate = DateTime.Now;
@@ -427,41 +427,40 @@ namespace DMR_API._Services.Services
             await _repoBPFC.SaveAll();
             return bpfcData;
         }
-        public async Task CloneGlueByCloneDto(CloneDto clone, BPFCEstablish bpfcDestination, BPFCEstablish bpfcSourceClone)
+        /// <summary>
+        /// Chuyển keo từ bpfcSourceClone -> bpfcDestination
+        /// </summary>
+        /// <param name="clone"></param>
+        /// <param name="bpfcDestination"></param>
+        /// <param name="bpfcSourceClone"></param>
+        /// <returns></returns>
+        public async Task ExportGlueFromBPFCSourceToBPFCDestination(int cloneBy, BPFCEstablish bpfcDestination, BPFCEstablish bpfcSource)
         {
-
-            var gluesData = new List<Glue>();
-            gluesData = bpfcSourceClone.Glues.Where(x => x.isShow == true).ToList();
-            //if (bpfcSourceClone.Glues == null)
-            //{
-            //}
-            //else
-            //{
-            //    var list2 = bpfcSourceClone.Glues.Where(x => x.isShow == true).Select(x => x.Name);
-            //    var list1 = bpfcDestination.Glues.Where(x => x.isShow == true).Select(x => x.Name);
-            //    var check = list2.Except(list1);
-            //    gluesData = bpfcSourceClone.Glues.Where(x => x.isShow == true).ToList();
-
-            //}
-            var checkExist = _repoGlue.FindAll().Where(x => x.BPFCEstablishID == bpfcDestination.ID && x.isShow == true).ToList();
-            if (checkExist != null)
+            // Tìm keo(Glue) trong BPFC đích (BPFC Destination)
+            // Nếu tồn tại keo thì xóa hết.
+            var checkExist = await _repoGlue.FindAll().Where(x => x.BPFCEstablishID == bpfcDestination.ID && x.isShow == true).ToListAsync();
+            if (checkExist.Count > 0)
             {
                 _repoGlue.RemoveMultiple(checkExist);
                 await _repoGlue.SaveAll();
             }
 
+            // Lấy keo của BPFC nguồn (BPFC source)
+            // Nếu nguồn k có keo thì thông báo không clone dc
+            var gluesData = new List<Glue>();
+            gluesData = bpfcSource.Glues.Where(x => x.isShow == true).ToList();
             if (gluesData.Count == 0)
                 return;
-            
+
             foreach (var item in gluesData)
             {
-               
+
                 var glue = new Glue();
                 glue.Code = await this.GenatateGlueCode(item.Code);
                 glue.Name = item.Name;
                 glue.isShow = true;
                 glue.Consumption = item.Consumption;
-                glue.CreatedBy = clone.CloneBy;
+                glue.CreatedBy = cloneBy;
                 glue.MaterialID = item.MaterialID;
                 glue.KindID = item.KindID;
                 glue.PartID = item.PartID;
@@ -534,6 +533,12 @@ namespace DMR_API._Services.Services
                 await _repoGlueIngredient.SaveAll();
             }
         }
+        /// <summary>
+        /// Tìm artprocess theo articleNoID và processID (artProcessID) đc gửi từ client
+        /// Nếu chưa có thì thêm mới
+        /// </summary>
+        /// <param name="clone"> clone.ArtProcess đây là ProcessID hiện tại hệ thống chỉ có 2 process STF, ASY</param>
+        /// <returns>Trả về ArtProcess</returns>
         public async Task<ArtProcess> FindArtProcessByCloneDto(CloneDto clone)
         {
             var artProcess = await _repoArtProcess.FindAll().FirstOrDefaultAsync(x => x.ArticleNoID == clone.ArticleNOID && x.ProcessID == clone.ArtProcessID);
@@ -549,7 +554,13 @@ namespace DMR_API._Services.Services
                 return artProcessData;
             }
         }
-        public async Task<BPFCEstablish> FindBPFCByCloneDto(CloneDto clone, ArtProcess artProcess)
+        /// <summary>
+        /// Tìm BPFC đích (BPFC Destination)
+        /// </summary>
+        /// <param name="clone"></param>
+        /// <param name="artProcess"></param>
+        /// <returns></returns>
+        public async Task<BPFCEstablish> FindBPFCDestination(CloneDto clone, ArtProcess artProcess)
         {
             var bpfcForClone = await _repoBPFC.FindAll()
                                               .Include(x => x.ModelName)
@@ -565,98 +576,68 @@ namespace DMR_API._Services.Services
                                                                                           && x.ArtProcessID == artProcess.ID);
             return bpfcForClone;
         }
-        public async Task<object> CloneModelName(CloneDto clone)
+        /// <summary>
+        /// FlowChart
+        /// B1: Chọn BPFC nguồn và chọn ModelNameID, ModelNoID, ArticleNoID, Process
+        /// B2: Kiểm tra BPFC nguồn có trong db chưa. Nếu không tồn tại -> Kết thúc
+        /// B3: 
+        ///     Tìm ArtProcess theo ArticleNoID và ProcecssID -> Không tồn tại -> thêm mới -> Trả về ProcessID
+        ///     Kiểm BPFC đích theo ModelNameID, ModelNoID, ArticleNoID, ArticleNoID, ProcessID có trong Db chưa -> Không tồn tại -> thêm mới -> trả về BPFC đích
+        ///     Bước nhân bản: Xóa tất cả keo của BPFC đích -> Lấy tất cả keo của BPFC nguồn thêm vào BPFC đích
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public async Task<object> CloneModelName(CloneDto model)
         {
             try
             {
                 using (var scope = new TransactionScope(TransactionScopeOption.Required,
                   new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
                 {
-
-                    var bpfc = await _repoBPFC.FindAll()
+                    //B1: Tìm bpfc nguồn
+                    var bpfcSource = await _repoBPFC.FindAll()
                     .Include(x => x.ModelName)
                     .Include(x => x.ModelNo)
                     .Include(x => x.ArtProcess)
                     .Include(x => x.ArticleNo)
                     .Include(x => x.Glues).ThenInclude(x => x.GlueIngredients)
                     .Include(x => x.Plans)
-                    .FirstOrDefaultAsync(x => x.ID == clone.BPFCID);
-                    if (bpfc == null)
+                    .FirstOrDefaultAsync(x => x.ID == model.BPFCID);
+
+                    // B2: Kiểm tra chưa có thì thông báo lỗi
+                    if (bpfcSource == null)
                         return new
                         {
                             message = "The BPFC is invalid!",
                             status = false
                         };
-                    /// Case 1: 
-                    // IF keep model Name
-                    if (bpfc.ModelNameID == clone.ModelNameID)
+                    // Nếu chưa tạo process thì tạo mới
+                    var artProcess = await FindArtProcessByCloneDto(model);
+
+                    // Tìm BPFC đích
+                    var bpfcDestination = await FindBPFCDestination(model, artProcess);
+                    // Nếu chưa có trong bảng BPFCEstablish thì thêm mới
+                    if (bpfcDestination == null)
                     {
-                        /// Case 1.1: 
-                        // Change model NO
-                        if (bpfc.ModelNoID != clone.ModelNOID)
-                        {
-                            var artProcess = await FindArtProcessByCloneDto(clone);
-                            var bpfcForClone = await FindBPFCByCloneDto(clone, artProcess);
-                            // Not exists bpfc -> add new -> clone
-                            if (bpfcForClone == null)
-                            {
-                                var bpfcClone = await CreateNewBPFCByCloneDto(clone, artProcess.ID);
-                                await CloneGlueByCloneDto(clone, bpfc, bpfcClone);
-                            }
-                            else
-                            {
-                                await CloneGlueByCloneDto(clone, bpfc, bpfcForClone);
-                            }
-                        }
-                        // IF keep model NO
-                        if (bpfc.ModelNoID == clone.ModelNOID)
-                        {
-                            var artProcess = await FindArtProcessByCloneDto(clone);
-                            var bpfcForClone = await FindBPFCByCloneDto(clone, artProcess);
-                            if (bpfcForClone == null)
-                            {
-                                var bpfcClone = await CreateNewBPFCByCloneDto(clone, artProcess.ID);
-                                await CloneGlueByCloneDto(clone, bpfc, bpfcClone);
-                            }
-                            else
-                            {
-                                clone.ArtProcessID = artProcess.ID;
-                                await CloneGlueByCloneDto(clone, bpfc, bpfcForClone);
-                            }
-                        }
+                        bpfcDestination = await CreateNewBPFCDestination(model, artProcess.ID);
                     }
-                    /// Case 2: 
-                    // Change different ModelName
-                    if (bpfc.ModelNameID != clone.ModelNameID)
-                    {
-                        var artProcess = await FindArtProcessByCloneDto(clone);
-                        // Check BPFC
-                        var bpfcForClone = await FindBPFCByCloneDto(clone, artProcess);
-                        // Not exists bpfc -> add new BPFC -> CloneGlueByCloneDto
-                        if (bpfcForClone == null)
-                        {
-                            var cloneBPFC = await CreateNewBPFCByCloneDto(clone, artProcess.ID);
-                            await CloneGlueByCloneDto(clone, bpfc, cloneBPFC);
-                        }
-                        else
-                        {
-                            await CloneGlueByCloneDto(clone, bpfc, bpfcForClone);
-                        }
-                    }
+                    // Nhân bản
+                    await ExportGlueFromBPFCSourceToBPFCDestination(model.CloneBy, bpfcDestination, bpfcSource);
+                   
                     scope.Complete();
                 }
                 return new
                 {
-                    message = "The BPFC has been cloned!",
+                    message = "Đã nhân bản thành công! <br>The BPFC has been cloned!",
                     status = true
                 };
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Loi clone model name", ex);
+                Console.WriteLine("Clone BPFC: ", ex);
                 return new
                 {
-                    message = "",
+                    message = "Nhân bản không thành công! <br> Clone failed!",
                     status = false
                 };
             }
