@@ -136,7 +136,7 @@ namespace DMR_API._Services.Services
             {
                 if (module.ModuleTranslations.Count > 0)
                 {
-                    _repoModuleTranslation.Remove(module.ModuleTranslations);
+                    _repoModuleTranslation.RemoveMultiple(module.ModuleTranslations.ToList());
                 }
                 _repoModule.Remove(module);
                 var result = await _repoModule.SaveAll();
@@ -215,7 +215,7 @@ namespace DMR_API._Services.Services
                     {
                         ID = x.ID,
                         Index = ++i,
-                        Name = x.Name,
+                        Name = x.Name == "" || x.Name == null ? x.FunctionTranslations.First(x => x.LanguageID == "en").Name : x.Name,
                         Code = x.Code,
                         Icon = x.Icon,
                         Url = x.Url,
@@ -292,7 +292,8 @@ namespace DMR_API._Services.Services
             {
                 var function = await _repoFunctionSystem.FindAll(x => x.ID == functionID)
               .Include(x => x.FunctionTranslations).FirstOrDefaultAsync();
-                _repoFunctionTranslation.Remove(function.FunctionTranslations);
+                if (function.FunctionTranslations.Count > 0)
+                    _repoFunctionTranslation.RemoveMultiple(function.FunctionTranslations.ToList());
                 _repoFunctionSystem.Remove(function);
                 var result = await _repoFunctionSystem.SaveAll();
                 return new ResponseDetail<object> { Status = result };
@@ -407,12 +408,14 @@ namespace DMR_API._Services.Services
             var query = _repoActionInFunctionSystem.FindAll()
                 .Include(x => x.Action)
                 .Include(x => x.FunctionSystem)
+                .ThenInclude(x => x.FunctionTranslations)
+                .Include(x => x.FunctionSystem)
                 .ThenInclude(x => x.Module)
                 .Select(x => new
                 {
                     Id = x.FunctionSystem.ID,
                     FunctionCode = x.FunctionSystem.Code,
-                    Name = x.FunctionSystem.Name,
+                    Name = x.FunctionSystem.Name == "" || x.FunctionSystem.Name == null ? x.FunctionSystem.FunctionTranslations.First(x => x.LanguageID == "en").Name : x.FunctionSystem.Name,
                     ActionName = x.Action.Name,
                     ActionID = x.Action.ID,
                     SequenceFunction = x.FunctionSystem.Sequence,
@@ -420,8 +423,7 @@ namespace DMR_API._Services.Services
                     ModuleCode = x.FunctionSystem.Module.Code,
                     ModuleNameID = x.FunctionSystem.Module.ID,
                     Code = x.Action.Code,
-                });
-            //.Where(x => !Permissions.Contains(x.FunctionCode)); 
+                }).Where(x => !Permissions.Contains(x.FunctionCode)); 
             // Dieu kien nay de khong load nhung chuc nang he thong
             var model = from t1 in query
                         from t2 in permission.Where(x => roleID.Contains(x.RoleID) && t1.Id == x.FunctionSystemID && x.ActionID == t1.ActionID)

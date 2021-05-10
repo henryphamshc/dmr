@@ -1,3 +1,6 @@
+<ngx-spinner [fullScreen]="true" type="square-jelly-box" size="medium">
+  <p class="loading">Loading data...</p>
+</ngx-spinner>
 <div class="row">
     <!-- <div class="col-md-12 my-3">
             <button (click)="openaddModalName(addModalName)" class="btn bg-gradient-secondary btn-sm">
@@ -15,13 +18,14 @@
                 </div>
             </div> -->
 
-            <ejs-grid #gridModel
+            <ejs-grid #gridModel id="grid"
                 [searchSettings]="searchSettings"
                 (dataBound)='dataBound()'
                 (toolbarClick)='toolbarClick($event)'
                 (actionBegin)="actionBegin($event)"
                 (recordDoubleClick)='onDoubleClick($event)'
                 (actionComplete)='actionComplete($event)'
+                (created)="createdSearch($event)"
                 [toolbar]='toolbar'
                 [dataSource]='data'
                 allowPaging='true'

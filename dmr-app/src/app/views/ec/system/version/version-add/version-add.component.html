@@ -13,7 +13,15 @@
             </div>
             <div class="form-group">
               <label for="exampleInputFile">Description</label>
-              <ckeditor id='editor' [(ngModel)]='description' [editor]="editor" [config]="config" ></ckeditor>
+              <!-- <ckeditor id='editor' [(ngModel)]='description' [editor]="editor" [config]="config" ></ckeditor> -->
+            <div class="control-section">
+              <ejs-richtexteditor #toolsRTE id='alltoolRTE' [toolbarSettings]='tools' [showCharCount]='true' [maxLength]='maxLength'
+                [fileManagerSettings]='fileManagerSettings' [quickToolbarSettings]='quickToolbarSettings'
+                [(ngModel)]='description' >
+            
+              </ejs-richtexteditor>
+            </div>
+
             </div>
               <div class="form-group">
                 <label for="uploadBy">Upload by</label>
@@ -30,3 +38,4 @@
       </div>
   </div>
 </div>
+

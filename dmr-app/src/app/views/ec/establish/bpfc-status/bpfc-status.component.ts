@@ -19,6 +19,7 @@ import { count } from 'console';
 import { UserService } from 'src/app/_core/_service/user.service';
 import { IRole } from 'src/app/_core/_model/role';
 import { ActionConstant } from 'src/app/_core/_constants';
+import { NgxSpinnerService } from 'ngx-spinner';
 @Component({
   selector: 'app-bpfc-status',
   templateUrl: './bpfc-status.component.html',
@@ -59,6 +60,7 @@ export class BpfcStatusComponent extends BaseComponent implements OnInit, AfterV
     { text: 'Approved', tooltipText: 'Approved', prefixIcon: 'fa fa-check', id: 'Approved' },
     'All', 'Search'
   ];
+  tab: string;
   constructor(
     private modalNameService: ModalNameService,
     private bPFCEstablishService: BPFCEstablishService,
@@ -69,15 +71,15 @@ export class BpfcStatusComponent extends BaseComponent implements OnInit, AfterV
     private commentService: CommentService,
     private calendarsService: CalendarsService,
     private userService: UserService,
-    private authService: AuthService,
+    private spinner: NgxSpinnerService,
     private route: ActivatedRoute,
   ) { super(); }
 
   ngOnInit() {
+    this.tab = 'Default';
     this.Permission(this.route);
     this.pageSettings = { pageSizes: true, currentPage: 1, pageSize: 10, pageCount: 20 };
     this.editparams = { params: { popupHeight: '300px' } };
-    this.getAllUsers();
   }
   Permission(route: ActivatedRoute) {
     const functionCode = route.snapshot.data.functionCode;
@@ -118,7 +120,26 @@ export class BpfcStatusComponent extends BaseComponent implements OnInit, AfterV
     //   }
     // });
   }
+  createdSearch(args) {
+    this.getAllUsers();
 
+  }
+  loadData() {
+    switch (this.tab) {
+      case 'Approved':
+        this.filterByApprovedStatus();
+        break;
+      case 'Rejected':
+        this.filterRejected();
+        break;
+      case 'All':
+        this.getAllBPFCStatus();
+        break;
+      case 'Default':
+        this.defaultFilter();
+        break;
+    }
+  }
   dataBound() {
     this.gridModel.autoFitColumns();
   }
@@ -160,6 +181,7 @@ export class BpfcStatusComponent extends BaseComponent implements OnInit, AfterV
   }
 
   getAllBPFCStatus() {
+    this.spinner.show();
     this.bPFCEstablishService.getAllBPFCStatus().subscribe((res: any) => {
       this.data = res.map(item => {
         return  {
@@ -183,9 +205,12 @@ export class BpfcStatusComponent extends BaseComponent implements OnInit, AfterV
           bpfcName: `${item.modelName } - ${item.modelNo } - ${item.articleNo } - ${item.artProcess }`,
         };
       });
-    });
+      this.editTextOfBtn();
+      this.spinner.hide();
+    }, () => this.spinner.hide());
   }
   filterRejected() {
+    this.spinner.show();
     this.bPFCEstablishService.rejectedFilter().subscribe((res: any) => {
       this.data = res.map(item => {
         return {
@@ -209,9 +234,12 @@ export class BpfcStatusComponent extends BaseComponent implements OnInit, AfterV
           bpfcName: `${item.modelName} - ${item.modelNo} - ${item.articleNo} - ${item.artProcess}`,
         };
       });
-    });
+      this.editTextOfBtn();
+      this.spinner.hide();
+    }, () => this.spinner.hide());
   }
   filterByApprovedStatus() {
+    this.spinner.show();
     this.bPFCEstablishService.filterByApprovedStatus().subscribe((res: any) => {
       this.data = res.map(item => {
         return  {
@@ -235,10 +263,13 @@ export class BpfcStatusComponent extends BaseComponent implements OnInit, AfterV
           bpfcName: `${item.modelName } - ${item.modelNo } - ${item.articleNo } - ${item.artProcess }`,
         };
       });
-    });
+      this.editTextOfBtn();
+      this.spinner.hide();
+    }, () => this.spinner.hide());
   }
 
   filterByFinishedStatus() {
+    this.spinner.show();
     this.bPFCEstablishService.filterByFinishedStatus().subscribe((res: any) => {
       this.data = res.map(item => {
         return  {
@@ -262,9 +293,12 @@ export class BpfcStatusComponent extends BaseComponent implements OnInit, AfterV
           bpfcName: `${item.modelName } - ${item.modelNo } - ${item.articleNo } - ${item.artProcess }`,
         };
       });
-    });
+      this.editTextOfBtn();
+      this.spinner.hide();
+    }, () => this.spinner.hide());
   }
   defaultFilter() {
+    this.spinner.show();
     this.bPFCEstablishService.defaultFilter().subscribe((res: any) => {
       this.data = res.map(item => {
         return {
@@ -288,9 +322,12 @@ export class BpfcStatusComponent extends BaseComponent implements OnInit, AfterV
           bpfcName: `${item.modelName} - ${item.modelNo} - ${item.articleNo} - ${item.artProcess}`,
         };
       });
-    });
+      this.editTextOfBtn();
+      this.spinner.hide();
+    }, () => this.spinner.hide());
   }
   filterByNotApprovedStatus() {
+    this.spinner.show();
     this.bPFCEstablishService.filterByNotApprovedStatus().subscribe((res: any) => {
       this.data = res.map(item => {
         return  {
@@ -314,7 +351,8 @@ export class BpfcStatusComponent extends BaseComponent implements OnInit, AfterV
           bpfcName: `${item.modelName } - ${item.modelNo } - ${item.articleNo } - ${item.artProcess }`,
         };
       });
-    });
+      this.spinner.hide();
+    }, () => this.spinner.hide());
   }
 
   update(modelname) {
@@ -435,20 +473,24 @@ export class BpfcStatusComponent extends BaseComponent implements OnInit, AfterV
   }
 
   toolbarClick(args: any): void {
-    switch (args.item.text) {
+    switch (args.item.id) {
       case 'Approved':
+        this.tab = 'Approved';
         this.filterByApprovedStatus();
         break;
       case 'Rejected':
+        this.tab = 'Rejected';
         this.filterRejected();
         break;
-      case 'All':
+      case 'grid_All':
+        this.tab = 'All';
         this.getAllBPFCStatus();
         break;
       case 'Excel Export':
         this.gridModel.excelExport();
         break;
-      case 'Default':
+      case 'grid_Default':
+        this.tab = 'Default';
         this.defaultFilter();
         break;
     }
@@ -457,7 +499,7 @@ export class BpfcStatusComponent extends BaseComponent implements OnInit, AfterV
   getAllUsers() {
     this.userService.getAllUserInfo().subscribe((res: any) => {
       this.users = res;
-      this.defaultFilter();
+      this.loadData();
     });
   }
 
@@ -517,5 +559,74 @@ export class BpfcStatusComponent extends BaseComponent implements OnInit, AfterV
       return '#N/A';
     }
   }
-
+  editTextOfBtn() {
+    const allBtn = document.getElementById('grid_All') as HTMLButtonElement;
+    const defaultBtn = document.getElementById('grid_Default') as HTMLButtonElement;
+    const rejectedBtn = document.getElementById('Rejected') as HTMLButtonElement;
+    const approvedBtn = document.getElementById('Approved') as HTMLButtonElement;
+    switch (this.tab) {
+      case 'All':
+        this.setAttrBtn(allBtn);
+        // reset color
+        this.resetAttrBtn(defaultBtn);
+        this.resetAttrBtn(rejectedBtn);
+        this.resetAttrBtn(approvedBtn);
+      break;
+      case 'Default':
+        this.setAttrBtn(defaultBtn);
+        // reset color
+        this.resetAttrBtn(allBtn);
+        this.resetAttrBtn(rejectedBtn);
+        this.resetAttrBtn(approvedBtn);
+        break;
+      case 'Rejected':
+        this.setAttrBtn(rejectedBtn);
+        // reset color
+        this.resetAttrBtn(defaultBtn);
+        this.resetAttrBtn(allBtn);
+        this.resetAttrBtn(approvedBtn);
+        break;
+      case 'Approved':
+        this.setAttrBtn(approvedBtn);
+        // reset color
+        this.resetAttrBtn(rejectedBtn);
+        this.resetAttrBtn(defaultBtn);
+        this.resetAttrBtn(allBtn);
+        break;
+    }
+  }
+  setAttrBtn(btn: HTMLButtonElement, styleBtn = {
+    background: '#6c757d',
+    boxShadow: '0 0 0 3px rgba(130, 138, 145, 0.5)',
+    border: '1px solid #6c757d',
+    margin: '0',
+    borderColor: '#6c757d',
+    borderRadius: '4px',
+    color: '#fff',
+  }) {
+    btn.style.background = styleBtn.background;
+    btn.style.boxShadow = styleBtn.boxShadow;
+    btn.style.border = styleBtn.border;
+    btn.style.margin = styleBtn.margin;
+    btn.style.borderColor = styleBtn.borderColor;
+    btn.style.borderRadius = styleBtn.borderRadius;
+    btn.style.color = styleBtn.color;
+  }
+  resetAttrBtn(btn: HTMLButtonElement, styleBtn = {
+    background: '#f8f9fa',
+    boxShadow: 'none',
+    border: 'none',
+    margin: '0',
+    borderColor: '#f8f9fa',
+    borderRadius: 'none',
+    color: '#495057',
+  }) {
+    btn.style.background = styleBtn.background;
+    btn.style.boxShadow = styleBtn.boxShadow;
+    btn.style.border = styleBtn.border;
+    btn.style.margin = styleBtn.margin;
+    btn.style.borderColor = styleBtn.borderColor;
+    btn.style.borderRadius = styleBtn.borderRadius;
+    btn.style.color = styleBtn.color;
+  }
 }

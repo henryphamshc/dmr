@@ -95,7 +95,7 @@ export class PrintGlueDispatchListComponent implements OnInit, OnDestroy {
         const mixing = {
           glueName: this.value.glueName,
           glueID: this.value.glueID,
-          buildingID: this.building.id,
+          buildingID: JSON.parse(localStorage.getItem('buildingID')),
           mixBy: JSON.parse(localStorage.getItem('user')).user.id || 0,
           estimatedStartTime: this.value.estimatedStartTime,
           estimatedFinishTime: this.value.estimatedFinishTime,

@@ -41,16 +41,24 @@ export class AutoSelectSubpackageDirective implements AfterViewInit, OnInit, OnD
   ngOnDestroy() {
     this.subscription.forEach(item => item.unsubscribe());
   }
-  @HostListener('document:keydown.enter', ['$event'])
-  onKeydownHandler(event: KeyboardEvent) {
-    console.log('document:keydown.enter');
+  // @HostListener('document:keydown.enter', ['$event'])
+  // onKeydownHandler(event: KeyboardEvent) {
+  //   console.log('document:keydown.enter');
+  //   event.preventDefault();
+  //   this.host.nativeElement.value = this.host.nativeElement.value + '    ';
+  // }
+  // @HostListener('document:keydown.tab', ['$event'])
+  // onKeydownTabHandler(event: KeyboardEvent) {
+  //   console.log('document:keydown.tab');
+  //   event.preventDefault();
+  //   this.host.nativeElement.value = this.host.nativeElement.value + '    ';
+  // }
+
+  @HostListener('window:keydown', ['$event'])
+  spaceEvent(event: any) {
     event.preventDefault();
-    this.host.nativeElement.value = this.host.nativeElement.value + '    ';
-  }
-  @HostListener('document:keydown.tab', ['$event'])
-  onKeydownTabHandler(event: KeyboardEvent) {
-    console.log('document:keydown.tab');
-    event.preventDefault();
-    this.host.nativeElement.value = this.host.nativeElement.value + '    ';
+    if (event.ctrlKey && event.keyCode === 74) {
+      this.host.nativeElement.value = this.host.nativeElement.value + '    ';
+    }
   }
 }

@@ -1,8 +1,10 @@
 import { NgModule } from "@angular/core";
 import { RouterModule, Routes } from "@angular/router";
 import { AuthGuard } from "src/app/_core/_guards/auth.guard";
-import { BPFCScheduleComponent, BpfcDetailComponent,
-  BpfcStatusComponent, Bpfc1Component } from ".";
+import {
+  BPFCScheduleComponent, BpfcDetailComponent,
+  BpfcStatusComponent, Bpfc1Component
+} from ".";
 import { BpfcDetailV2Component } from "./bpfc-detailv2/bpfc-detailv2.component";
 const routes: Routes = [
   {
@@ -22,10 +24,29 @@ const routes: Routes = [
             component: BPFCScheduleComponent
           },
           {
-            path: 'detail',
+            path: ':tab',
+            data: {
+              title: 'bpfc-schedule',
+              breadcrumb: 'BPFC Schedule',
+              functionCode: 'BPFC Schedule'
+            },
+            component: BPFCScheduleComponent
+          },
+          {
+            path: ':tab/:keySearch',
+            data: {
+              title: 'bpfc-schedule',
+              breadcrumb: 'BPFC Schedule',
+              functionCode: 'BPFC Schedule'
+            },
+            component: BPFCScheduleComponent
+          },
+          {
+            path: ':tab/detail',
             data: {
               title: 'Detail',
-              breadcrumb: 'Detail'
+              breadcrumb: 'Detail',
+              functionCode: 'BPFC Schedule'
             },
             children: [
               {
@@ -39,10 +60,11 @@ const routes: Routes = [
             ]
           },
           {
-            path: 'detailv2',
+            path: ':tab/detailv2',
             data: {
               title: 'Detail',
-              breadcrumb: 'Detail'
+              breadcrumb: 'Detail',
+              functionCode: 'BPFC Schedule'
             },
             children: [
               {

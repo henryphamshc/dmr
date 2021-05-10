@@ -1,16 +1,22 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ChangeEvent } from '@ckeditor/ckeditor5-angular';
 import ClassicEditor from '@haifahrul/ckeditor5-build-rich';
+import { BaseEditor } from 'src/app/_core/_component/editor/base.editor';
 import { AlertifyService } from 'src/app/_core/_service/alertify.service';
 import { VersionService } from 'src/app/_core/_service/version.service';
+import { ToolbarService, LinkService, ImageService, HtmlEditorService } from '@syncfusion/ej2-angular-richtexteditor';
+import { TableService, FileManagerService } from '@syncfusion/ej2-angular-richtexteditor';
+
 @Component({
   selector: 'app-version-add',
   templateUrl: './version-add.component.html',
-  styleUrls: ['./version-add.component.scss']
+  styleUrls: ['./version-add.component.scss'],
+  encapsulation: ViewEncapsulation.None,
+  providers: [ToolbarService, LinkService, ImageService, HtmlEditorService, TableService, FileManagerService]
 })
-export class VersionAddComponent implements OnInit {
+export class VersionAddComponent extends BaseEditor implements OnInit {
   editor = ClassicEditor;
   config = {
     toolbar: [
@@ -72,7 +78,9 @@ export class VersionAddComponent implements OnInit {
     private datePipe: DatePipe,
     private router: Router,
     private route: ActivatedRoute,
-  ) { }
+  ) {
+    super();
+  }
 
   ngOnInit() {
     this.Id = +this.route.snapshot.params.id || 0;

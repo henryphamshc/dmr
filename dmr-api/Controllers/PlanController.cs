@@ -87,12 +87,7 @@ namespace DMR_API.Controllers
             var plans = await _planService.GetAllPlansByDate(from, to);
             return Ok(plans);
         }
-        //[HttpGet("{modeNameID}")]
-        //public async Task<IActionResult> GetPlanByModelNameID(int modeNameID)
-        //{
-        //    var lists = await _planService.GetPlanByModelNameID(modeNameID);
-        //    return Ok(lists);
-        //}
+   
         [HttpGet("{text}")]
         public async Task<IActionResult> Search([FromQuery] PaginationParams param, string text)
         {
@@ -121,28 +116,8 @@ namespace DMR_API.Controllers
             var startTime = create.DueDate.Date.Add(new TimeSpan(start.Hour, start.Minute, 0)).ToRemoveSecond();
             var endTime = create.DueDate.Date.Add(new TimeSpan(16, 30, 0)).ToRemoveSecond();
 
-            DateTime timeNow = DateTime.Now.ToLocalTime().ToRemoveSecond();
             create.StartWorkingTime = startTime;
             create.FinishWorkingTime = endTime;
-
-            var dateNow = DateTime.Now.Date;
-            //if (startTime >= endTime)
-            //    return BadRequest("The start time must be less than or equal to the end time!<br> Thời gian bắt đầu phải nhỏ hơn hoặc bằng thời gian kết thúc! ");
-
-            //if (startTime < timeNow)
-            //    return BadRequest("The start time must be greater than or equal to the current time!<br> Thời gian bắt đầu phải lớn hơn hoặc bằng thời gian hiện tại! ");
-
-            //if (create.DueDate.Date < dateNow) 
-            //    return BadRequest("The duedate must be greater than or equal to the current date!<br> Ngày hết hạn phải lớn hơn hoặc bằng ngày hiện tại! ");
-
-            //if (await _planService.CheckDuplicate(create.BuildingID, create.BPFCEstablishID, create.DueDate))
-            //    return BadRequest("Plan already exists!<br> Kế hoạch làm việc này đã tồn tại! ");
-
-            //if (_planService.GetById(create.ID) != null)
-            //    return BadRequest("Plan ID already exists!<br> Kế hoạch làm việc này đã tồn tại!");
-
-            //if (await _planService.CheckExistTimeRange(create.BuildingID, startTime, endTime, create.DueDate))
-            //    return BadRequest("The time range of plans already exists!<br> Khoảng thời gian này đã trùng lắp với 1 khoảng thời gian khác.!");
 
             var model = await _planService.Add(create);
             if (model)
@@ -321,20 +296,6 @@ namespace DMR_API.Controllers
             var subject = "Mixing Room Report";
             var fileName = $"{DateTime.Now.ToString("MMddyyyy")}_AchievementRateReport.xlsx";
             var message = "Please refer to the Mixing Room Report";
-            var mailList = new List<string>
-            {
-                //"mel.kuo@shc.ssbshoes.com",
-                //"maithoa.tran@shc.ssbshoes.com",
-                //"andy.wu@shc.ssbshoes.com",
-                //"sin.chen@shc.ssbshoes.com",
-                //"leo.doan@shc.ssbshoes.com",
-                //"heidy.amos@shc.ssbshoes.com",
-                //"bonding.team@shc.ssbshoes.com",
-                //"Ian.Ho@shc.ssbshoes.com",
-               // "swook.lu@shc.ssbshoes.com",
-                //"damaris.li@shc.ssbshoes.com",
-                //"peter.tran@shc.ssbshoes.com"
-            };
             if (res.Data != null || res.Data.Length > 0)
             {
                 await _mailingService.SendEmailWithAttactExcelFileAsync(emails, subject, message, fileName, res.Data);

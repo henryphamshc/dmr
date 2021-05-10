@@ -720,7 +720,11 @@ namespace DMR_API._Services.Services
                 try
                 {
                     var plan = _mapper.Map<Plan>(model);
-                    var checkExist = await _repoPlan.FindAll().OrderByDescending(x=> x.CreatedDate).FirstOrDefaultAsync(x => x.BuildingID == model.BuildingID && x.DueDate.Date == model.DueDate.Date);
+                    var checkExist = await _repoPlan.FindAll()
+                        .OrderByDescending(x=> x.CreatedDate)
+                        .FirstOrDefaultAsync(x =>
+                        x.BuildingID == model.BuildingID 
+                        && x.DueDate.Date == model.DueDate.Date);
                     // Neu ton tai thi kiem tra xem co phai la ngung chuyen khong
                     if (checkExist != null) {
                         if (checkExist.IsOffline) {

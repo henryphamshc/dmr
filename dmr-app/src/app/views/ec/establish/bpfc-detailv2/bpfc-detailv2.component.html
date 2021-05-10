@@ -132,26 +132,30 @@
   <!-- Right -->
   <div class="col-md-7">
     <div class="card">
-      <div class="card-header">
-        <h3 class="card-title">{{'PREVIEW' | translate}} </h3>
-        <div class="card-tools" *ngIf="existGlue">
-
-          <button type="button" class="btn btn-danger btn-sm mr-2 d-none"><i class="fas fa-undo"></i> Reset
+        <div class="card-header">
+          {{'PREVIEW' | translate}}
+          <div class="card-header-actions" *ngIf="existGlue">
+          <button type="button" (click)='back()' ejs-button cssClass="e-small e-primary mr-2">
+            <i class="fas fa-backward"></i> {{
+            'Back' | translate}}
           </button>
-          <ejs-switch #doneSwitch onLabel="{{'DONE' | translate}}" offLabel="{{'UNDONE' | translate}}"
-            [disabled]='approvalStatus' style="width: 100px; margin-right: 10px;" (click)='done()'
-            [(checked)]="createdStatus"></ejs-switch>
-          <ejs-switch #approvalSwitch onLabel="Approved" offLabel="{{'NOT_APPROVED' | translate}}" style="width: 120px;"
-            (click)='approval()' [(checked)]="approvalStatus">
-          </ejs-switch>
+            <button type="button" class="btn btn-danger btn-sm mr-2 d-none"><i class="fas fa-undo"></i> Reset
+            </button>
+            <ejs-switch #doneSwitch appPermission appFunction="BPFC Schedule" appAction="DONE" onLabel="{{'DONE' | translate}}"
+              offLabel="{{'UNDONE' | translate}}" [disabled]='approvalStatus' style="width: 100px; margin-right: 10px;"
+              (click)='done()' [(checked)]="createdStatus"></ejs-switch>
+            <ejs-switch #approvalSwitch appPermission appFunction="BPFC Schedule" appAction="APPROVAL" onLabel="Approved"
+              offLabel="{{'NOT_APPROVED' | translate}}" style="width: 120px;" (click)='approval()' [(checked)]="approvalStatus">
+            </ejs-switch>
 
-          <button type="button" (click)='finished()' ejs-button cssClass="e-small e-success ml-2"><i
-              class="fas fa-save"></i> {{ 'FINISHED' | translate}}
-          </button>
-          <button type="button" (click)='openModalHistory(HistoryModal)' ejs-button cssClass="e-small e-default ml-2"><i
-              class="fas fa-history"></i> History</button>
+            <button type="button" (click)='finished()' appPermission appFunction="BPFC Schedule" appAction="FINISH" ejs-button
+              cssClass="e-small e-success ml-2"><i class="fas fa-save"></i> {{ 'FINISHED' | translate}}
+            </button>
+            <button type="button" (click)='openModalHistory(HistoryModal)' ejs-button cssClass="e-small e-default ml-2"><i
+                class="fas fa-history"></i> History</button>
+          </div>
         </div>
-      </div>
+
       <div class="card-body" *ngIf="existGlue">
         <ul *ngIf="renderchemical().length > 0">
           <span style="visibility: hidden">{{formulaTamp()}}</span>

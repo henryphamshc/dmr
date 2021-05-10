@@ -2684,7 +2684,11 @@ namespace DMR_API._Services.Services
         {
             var mixing = await _repoMixingInfo.FindAll(x => x.ID == mixingInfoID).FirstOrDefaultAsync();
             if (mixing is null) return new MixingInfo();
-            var dispatchlist = await _repoDispatchList.FindAll(x => x.GlueNameID == glueNameID && x.EstimatedStartTime == estimatedStartTime && x.EstimatedFinishTime == estimatedFinsihTime).ToListAsync();
+            var dispatchlist = await _repoDispatchList.FindAll(x => 
+                                   x.BuildingID == mixing.BuildingID
+                                && x.GlueNameID == glueNameID 
+                                && x.EstimatedStartTime == estimatedStartTime 
+                                && x.EstimatedFinishTime == estimatedFinsihTime).ToListAsync();
             // B1: Cap nhat print time cho tat ca cac line
             // B2: Nhung nhung multiple glue thi trong 30 phut phai giao 2 lan , nhung single glue thi giao 1 lan
             // TH1: Neu la multiple thi them moi 2 dong du lieu vao bang Dispatch
@@ -2713,6 +2717,7 @@ namespace DMR_API._Services.Services
                     var dispatchListDetail = new List<Dispatch>();
                     var groupBy = dispatchlist.GroupBy(x => new
                     {
+                        x.BuildingID,
                         x.GlueNameID,
                         x.EstimatedFinishTime,
                         x.EstimatedStartTime
