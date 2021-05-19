@@ -66,6 +66,12 @@ export class ModalNameService {
     const url = `${this.baseUrl}ModelName/Clone`;
     return this.http.post(url, clone);
   }
+  cloneModelNameForBPFCShcedule(clone) {
+    const url = `${this.baseUrl}ModelName/CloneModelNameForBPFCShcedule`;
+    return this.http.post(url, clone);
+  }
+  
+
   cloneArticleModelname(modelNameID, modelName, modelNo, article, processID) {
     const url = `${this.baseUrl}ModelName/cloneArticleModelname/${modelNameID}/${modelName}/${modelNo}/${article}/${processID}`;
     return this.http.get(url, {});

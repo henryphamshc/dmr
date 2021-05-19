@@ -62,32 +62,32 @@ export class AuthenticationService implements OnDestroy {
       }
       if (event.key === 'login-event') {
         this.stopTokenTimer();
-        this.http.get<LoginResult>(`${this.apiUrl}/user`).subscribe((x) => {
-          this._user.next(x as ApplicationUser);
-        });
+        // this.http.get<LoginResult>(`${this.apiUrl}/user`).subscribe((x) => {
+        //   this._user.next(x as ApplicationUser);
+        // });
       }
-      if (event.key === 'functions') {
+      if (event.oldValue !== null && event.key === 'functions') {
         if (JSON.stringify(event.oldValue) !== JSON.stringify(event.newValue)) {
           this.logOut();
           window.location.reload();
         }
       }
-      if (event.key === 'level') {
+      if (event.oldValue !== null && event.key === 'level') {
         if (JSON.stringify(event.oldValue) !== JSON.stringify(event.newValue)) {
           this.logOut();
           window.location.reload();
         }
       }
       if (event.key === 'user') {
-        if (JSON.stringify(event.oldValue) !== JSON.stringify(event.newValue)) {
+        if (event.oldValue !== null && JSON.stringify(event.oldValue) !== JSON.stringify(event.newValue)) {
           this.logOut();
-          window.location.reload();
+          // window.location.reload();
         }
       }
-      if (event.key === 'navs') {
-        if (JSON.stringify(event.oldValue) !== JSON.stringify(event.newValue)) {
+      if (event.key === 'menus') {
+        if (event.oldValue !== null && JSON.stringify(event.oldValue) !== JSON.stringify(event.newValue)) {
           this.logOut();
-          window.location.reload();
+          // window.location.reload();
         }
       }
     }

@@ -150,6 +150,10 @@ namespace DMR_API.Helpers.AutoMapper
 
             CreateMap<FunctionSystem, FunctionDto>();
             CreateMap<Module, ModuleDto>();
+               CreateMap<Addition, AdditionDto>()
+            .ForMember(d => d.BPFCEstablishName, o => o.MapFrom(x => $"{x.BPFCEstablish.ModelName.Name} - {x.BPFCEstablish.ModelNo.Name} - {x.BPFCEstablish.ArticleNo.Name} - {x.BPFCEstablish.ArtProcess.Process.Name}"))
+            .ForMember(d => d.ChemicalName, o => o.MapFrom(s => s.Ingredient.Name))
+            .ForMember(d => d.LineName, o => o.MapFrom(s => s.Building.Name));
         }
 
     }

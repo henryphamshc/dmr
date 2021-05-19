@@ -11,9 +11,9 @@
     <div class="row">
       <div class="col-md-12">
         <ejs-grid #grid id='grid' [dataSource]='data' allowSorting='true' allowResizing='true' allowPaging="true"
-          (rowDataBound)='rowDB($event)' [pageSettings]='pageSettings' allowFiltering='true'
+          (rowDataBound)='rowDB($event)' [pageSettings]='pageSettings' allowFiltering='true' [height]='gridHeight'
           [filterSettings]='filterSettings' [sortSettings]="sortSettings" [editSettings]='editSettings'
-          [toolbar]='toolbarOptions' [allowExcelExport]='true' allowResizing='true' (created)="createdSearch($event)"
+          [toolbar]='toolbarOptions' [enablePersistence]='true' [frozenRows]='0' [allowExcelExport]='true' allowResizing='true' (created)="createdSearch($event)"
           gridLines='Both' showColumnMenu='true' (dataBound)='dataBound($event)' (toolbarClick)='toolbarClick($event)'
           (actionBegin)='actionBegin($event)' [searchSettings]='searchOptions'>
           <e-columns>
@@ -56,26 +56,23 @@
               headerText='Approval By Supervisor'>
             </e-column>
             <e-column field='season' textAlign='Center' width=100 headerText='Season'></e-column>
-            <e-column field='' [visible]='true' isPrimaryKey='true' textAlign='Center' headerText='-- Option --'
+            <e-column field='option' freeze='Right' textAlign='Center' headerText='-- Option --'
               width=170>
               <ng-template #template let-data>
                 <!-- detail btn -->
-                <button ejs-button (click)="detail(data)" cssClass="e-info mr-2" appPermission
-                  appFunction="BPFC Schedule" appAction="EDIT"><i class="far fa-edit"></i></button>
+                <button ejs-button (click)="detail(data)" cssClass="e-info mr-2" appPermission appFunction="BPFC Schedule" appAction="EDIT"><i class="far fa-edit"></i></button>
 
                 <!--  new version -->
-                <button ejs-button *ngIf="data.finishedStatus === true" appPermission appFunction="BPFC Schedule"
-                  appAction="CREATE" (click)='openModal(newVersionModal,data)' cssClass="e-primary mr-2"><i
-                    class="fa fa-plus"></i></button>
+                <button ejs-button *ngIf="data.finishedStatus === true" appPermission appFunction="BPFC Schedule" appAction="CREATE" (click)='openModal(newVersionModal,data)'
+                  cssClass="e-primary mr-2"><i class="fa fa-plus"></i></button>
 
                 <!-- clone -->
-                <button ejs-button *ngIf="data.finishedStatus === false" (click)='openModalClone(cloneModal,data)'
-                  appPermission appFunction="BPFC Schedule" appAction="CLONE" cssClass="e-success mr-2"><i
-                    class="fa fa-clone"></i></button>
+                <button ejs-button *ngIf="data.finishedStatus === false" (click)='openModalClone(cloneModal,data)' appPermission appFunction="BPFC Schedule" appAction="CLONE"
+                  cssClass="e-success mr-2"><i class="fa fa-clone"></i></button>
 
                 <!-- remove -->
-                <button ejs-button cssClass="e-danger" (click)='delete(data.id)' appPermission
-                  appFunction="BPFC Schedule" appAction="DELETE"><i class="fa fa-trash"></i></button>
+                <button ejs-button cssClass="e-danger" (click)='delete(data.id)' appPermission appFunction="BPFC Schedule" appAction="DELETE"><i
+                    class="fa fa-trash"></i></button>
               </ng-template>
             </e-column>
           </e-columns>
@@ -178,7 +175,20 @@
     </button>
   </div>
   <div class="modal-body">
+
     <div class="row">
+      <div class="col-md-12">
+        <div class="form-group">
+          <ejs-dropdownlist #changeBPFCDroupdownlist [dataSource]='BPFCsForChangeModal' [(ngModel)]="changebpfcID"
+            (filtering)='onFilteringChangeBPFCModal($event)' popupHeight='300px' popupWidth='450px'
+            (created)='created()' [placeholder]="'Select a model' | translate" [fields]='fieldsBPFC'
+            [allowFiltering]='true' (select)='onChangeBPFCModal($event)'>
+          </ejs-dropdownlist>
+        </div>
+      </div>
+    </div>
+
+    <!-- <div class="row">
       <div class="col-md-12">
         <div class="form-group">
           <label for="Name">Model Name</label>
@@ -208,7 +218,8 @@
           <input type="text" name="" disabled class="form-control" [value]="artProcess" required="required" title="">
         </div>
       </div>
-    </div>
+    </div> -->
+
   </div>
   <div class="modal-footer">
     <button type="button" class="btn btn-light" (click)="modal.close('Close click')">Close</button>

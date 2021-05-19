@@ -36,6 +36,8 @@ import { Button } from '@syncfusion/ej2-angular-buttons';
 import { IRole } from 'src/app/_core/_model/role';
 import { DatePicker } from '@syncfusion/ej2-angular-calendars';
 import { ActionConstant } from 'src/app/_core/_constants';
+import { highlightSearch } from '@syncfusion/ej2-angular-dropdowns';
+import { BPFC } from 'src/app/_core/_model/plan';
 const HttpUploadOptions = {
   headers: new HttpHeaders({ Accept: 'application/json' }),
 };
@@ -60,7 +62,7 @@ export class BPFCScheduleComponent extends BaseComponent implements OnInit, OnDe
   };
   data: any[];
   file: any;
-
+  gridHeight = screen.height - 100;
   @ViewChild('grid')
   public gridObj: GridComponent;
   modalReference: NgbModalRef;
@@ -141,6 +143,17 @@ export class BPFCScheduleComponent extends BaseComponent implements OnInit, OnDe
   ];
   keySearch: string;
   tab: string;
+  BPFCsForChangeModal: any;
+  changebpfcID: number;
+  BPFCs: any;
+  public queryString: string;
+  public fieldsBPFC: object = {
+    text: 'name', value: 'name', tooltip: 'name', itemCreated: (e: any) => {
+      highlightSearch(e.item, this.queryString, true, 'Contains');
+    }
+  };
+  bpfcDataSource: any;
+  isSTF: any;
   constructor(
     private modalNameService: ModalNameService,
     private alertify: AlertifyService,
@@ -187,6 +200,61 @@ export class BPFCScheduleComponent extends BaseComponent implements OnInit, OnDe
     });
   }
 
+  getAllBPFC() {
+    this.bPFCEstablishService.filterByApprovedStatus().subscribe((res: any) => {
+      // console.log('Nếu là thành hình thì chỉ lấy những mẫu giầy của thành hình, ngược lại lấy của xưởng đế!');
+      this.bpfcDataSource = res.map((item) => {
+        return {
+          id: item.id,
+          artProcess: item.artProcess,
+          glues: item.glues,
+          kinds: item.kinds,
+          name: `${item.modelName} - ${item.modelNo} - ${item.articleNo} - ${item.artProcess}`,
+        } as BPFC;
+      });
+      this.isSTF = JSON.parse(localStorage.getItem('isSTF'));
+      if (this.isSTF) {
+        const bpfcList = res.filter(x => x.artProcess === 'STF').map((item) => {
+          return {
+            id: item.id,
+            artProcess: item.artProcess,
+            glues: item.glues,
+            kinds: item.kinds,
+            name: `${item.modelName} - ${item.modelNo} - ${item.articleNo} - ${item.artProcess}`,
+          };
+        });
+        this.BPFCs = Object.assign([], bpfcList);
+        this.BPFCsForChangeModal = Object.assign([], bpfcList);
+      } else {
+        const bpfcList = res.filter(x => x.artProcess !== 'STF').map((item) => {
+          return {
+            id: item.id,
+            artProcess: item.artProcess,
+            glues: item.glues,
+            kinds: item.kinds,
+            name: `${item.modelName} - ${item.modelNo} - ${item.articleNo} - ${item.artProcess}`,
+          };
+        });
+        this.BPFCs = Object.assign([], bpfcList);
+        this.BPFCsForChangeModal = Object.assign([], bpfcList);
+      }
+      // console.log('Lấy danh sách mẫu giày: ', this.BPFCs.length);
+    });
+  }
+
+
+  public onFilteringChangeBPFCModal: EmitType<FilteringEventArgs> = (
+    e: FilteringEventArgs
+  ) => {
+    let query: Query = new Query();
+    // frame the query based on search string with filter type.
+    query =
+      e.text !== '' ? query.where('name', 'contains', e.text, true) : query;
+    // pass the filter data source, filter query to updateData method.
+    e.updateData(this.BPFCs as any, query);
+  }
+  created() { this.getAllBPFCForChangeModal(); }
+  getAllBPFCForChangeModal() {}
   onRouteChange() {
     this.route.data.subscribe(data => {
       if (this.route.snapshot.params.keySearch !== undefined) {
@@ -331,6 +399,7 @@ export class BPFCScheduleComponent extends BaseComponent implements OnInit, OnDe
     });
   }
 
+
   onClickCloneNewVersion() {
     if (this.value !== null) {
       this.articleNoNew = this.articleNoDefault + this.value;
@@ -384,6 +453,10 @@ export class BPFCScheduleComponent extends BaseComponent implements OnInit, OnDe
     }
   }
 
+
+  onChangeBPFCModal(args) {
+    this.BPFCID = args.itemData.id;
+  }
   onClickClone() {
     const clone = {
       modelNameID: this.modelNameID,
@@ -397,17 +470,42 @@ export class BPFCScheduleComponent extends BaseComponent implements OnInit, OnDe
   }
 
   clone(clone) {
-    this.modalNameService.clone(clone).subscribe((res: any) => {
-      if (res.status === true) {
-        this.alertify.success('Đã sao chép thành công! <br> Copy succeeded!');
-        this.getUndone();
-        this.gridObj.search(this.articleNoNew);
-        this.modalService.dismissAll();
-      } else {
-        this.alertify.error('The BPFC exists!');
-      }
+    this.alertify.confirm('Clone BPFC <br> Sao chép BPFC', 'Are you sure you want to copy from this BPFC ?<br> Bạn có chắc chắn muốn sao chép BPFC này không?', () => {
+      this.modalNameService.cloneModelNameForBPFCShcedule(clone).subscribe((res: any) => {
+        if (res.status === true) {
+          this.alertify.success('Đã sao chép thành công! <br> Copy succeeded!');
+          this.getUndone();
+          this.gridObj.search(this.articleNoNew);
+          this.modalService.dismissAll();
+        } else {
+          this.alertify.error('The BPFC exists!');
+        }
+      });
     });
+
   }
+
+  openModalClone(ref, data) {
+    this.modalReference = this.modalService.open(ref, { size: 'lg' });
+    this.getAllBPFC();
+    // this.BPFCID = data.id;
+    this.modelName = data.modelName;
+    this.modelNo = data.modelNo;
+    this.artProcess = data.artProcess;
+    this.articleNo = data.articleNo;
+    this.modelNameID = data.modelNameID;
+    this.modelNoID = data.modelNoID;
+    console.log(data);
+    this.articleNoID = data.articleNoID;
+    // this.artProcessID = data.artProcessID;
+    this.getArticleNoByModelNoID(this.modelNoID, data.articleNo);
+    if (data.artProcess === 'ASY') {
+      this.artProcessID = 1;
+    } else {
+      this.artProcessID = 2;
+    }
+  }
+
 
   openModal(ref, data) {
     this.modalReference = this.modalService.open(ref, { size: 'md', backdrop: 'static', keyboard: false });
@@ -428,27 +526,6 @@ export class BPFCScheduleComponent extends BaseComponent implements OnInit, OnDe
       this.artProcessID = 2;
     }
   }
-
-  openModalClone(ref, data) {
-    this.modalReference = this.modalService.open(ref, { size: 'md', backdrop: 'static', keyboard: false });
-    this.BPFCID = data.id;
-    this.modelName = data.modelName;
-    this.modelNo = data.modelNo;
-    this.artProcess = data.artProcess;
-    this.articleNo = data.articleNo;
-    this.modelNameID = data.modelNameID;
-    this.modelNoID = data.modelNoID;
-    this.articleNoID = 0;
-    // this.artProcessID = data.artProcessID;
-    this.getArticleNoByModelNoID(this.modelNoID, data.articleNo);
-    if (data.artProcess === 'ASY') {
-      this.artProcessID = 1;
-    } else {
-      this.artProcessID = 2;
-    }
-  }
-
-
 
   actionBegin(args) {
     if (args.requestType === 'searching') {
@@ -481,6 +558,8 @@ export class BPFCScheduleComponent extends BaseComponent implements OnInit, OnDe
   }
 
   dataBound(args) {
+    let changedHeight = this.gridObj.element.getBoundingClientRect().height - parseInt(this.gridObj.height as string);
+    this.gridObj.height = parseInt(this.gridObj.height as string) - changedHeight;
     // console.log('databound', args);
     // (this.gridObj.columns[0] as any).isPrimaryKey = 'true';
     //  this.gridObj.autoFitColumns();

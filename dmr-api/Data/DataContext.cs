@@ -77,6 +77,7 @@ namespace DMR_API.Data
         public DbSet<ActionInFunctionSystem> ActionInFunctionSystem { get; set; }
 
         public DbSet<FunctionSystem> FunctionSystem { get; set; }
+        public DbSet<Addition> Additions { get; set; }
         public DbSet<SubpackageCapacity> SubpackageCapacity { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

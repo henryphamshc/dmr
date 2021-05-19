@@ -11,6 +11,7 @@ namespace DMR_API._Services.Interface
     {
        
         Task<object> CloneModelName(CloneDto clone);
+        Task<object> CloneModelNameForBPFCShcedule(CloneDto clone);
         Task<object> CloneBPFC(CloneDto clone);
         Task<List<ModelNameDto>> GetAllAsyncForAdmin();
         Task SendMailForPIC(string email);

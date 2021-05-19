@@ -1,3 +1,4 @@
+import { AdditionComponent } from './addition/addition.component';
 import { AutoSelectDirective } from './../select.directive';
 import { CoreDirectivesModule } from './../../../_core/_directive/core.directives.module';
 // Angular
@@ -135,7 +136,8 @@ loadCldr(
     SearchDirective,
     AutoSelectDirective,
     AutoSelectSubpackageDirective,
-    AutofocusSubpackageDirective
+    AutofocusSubpackageDirective,
+    AdditionComponent
   ]
 })
 export class ExecutionModule {

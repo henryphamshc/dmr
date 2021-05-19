@@ -1,4 +1,3 @@
-import { navItems } from '../../_nav';
 
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { AuthService } from '../../_core/_service/auth.service';
@@ -7,19 +6,16 @@ import { Router } from '@angular/router';
 import { HeaderService } from 'src/app/_core/_service/header.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { CalendarsService } from 'src/app/_core/_service/calendars.service';
-import { IHeader } from 'src/app/_core/_model/header.interface';
 import * as moment from 'moment';
 import { Nav } from 'src/app/_core/_model/nav';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateService } from '@ngx-translate/core';
 import { RoleService } from 'src/app/_core/_service/role.service';
 import { CookieService } from 'ngx-cookie-service';
-import { L10n, setCulture } from '@syncfusion/ej2-base';
 import { DataService } from 'src/app/_core/_service/data.service';
 import { PermissionService } from 'src/app/_core/_service/permission.service';
 import { AuthenticationService } from 'src/app/_core/_service/authentication.service';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { INavData } from '@coreui/angular';
 import { VersionService } from 'src/app/_core/_service/version.service';
 declare var require: any;
 import * as signalr from '../../../assets/js/ec-client.js';
@@ -39,13 +35,6 @@ export class DefaultLayoutComponent implements OnInit, AfterViewInit {
   public total: number;
   public totalCount: number;
   public page: number;
-  public ADMIN = 1;
-  public SUPERVISOR = 2;
-  public ADMIN_COSTING = 5;
-  public STAFF = 3;
-  public WORKER = 4;
-  public WORKER2 = 6;
-  public DISPATCHER = 6;
   public pageSize: number;
   public currentUser: string;
   public currentTime: any;
@@ -166,11 +155,7 @@ export class DefaultLayoutComponent implements OnInit, AfterViewInit {
     }
   }
   home() {
-    if (this.role.id === this.STAFF) {
-      return '/ec/execution/todolist-2';
-    } else {
-      return '/ec/execution/todolist-2';
-    }
+    return '/ec/execution/todolist-2';
   }
   onChange(args) {
     this.spinner.show();
