@@ -1,9 +1,12 @@
-import { ViewChild } from "@angular/core";
+import { Component, ViewChild } from "@angular/core";
 import { RichTextEditorComponent } from '@syncfusion/ej2-angular-richtexteditor';
 import { FileManagerSettingsModel, QuickToolbarSettingsModel } from '@syncfusion/ej2-angular-richtexteditor';
 
 import { ToolbarModule } from '@syncfusion/ej2-angular-navigations';
 
+@Component({
+  template: ''
+})
 export abstract class BaseEditor {
   @ViewChild('toolsRTE')
   public rteObj: RichTextEditorComponent;

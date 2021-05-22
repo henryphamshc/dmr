@@ -176,6 +176,6 @@ namespace DMR_API._Services.Interface
         /// (Update on time)/12(Total)=100% Achievement Rate  => what is the standard time of "update on time" ? 
         /// </summary>
         Task<ResponseDetail<object>> AchievementRate(int building);
-
+        Task<ResponseDetail<Byte[]>> AchievementRateExcelExport(string date);
     }
 }
