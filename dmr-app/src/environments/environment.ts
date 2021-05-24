@@ -7,16 +7,23 @@ const SYSTEM_CODE = 3;
 export const environment = {
   production: false,
   systemCode: SYSTEM_CODE,
-  apiUrlEC: '/api/',
-  apiUrl: '/api/',
-  hub: '/ec-hub',
-  scalingHubLocal: '/scalingHub',
-  scalingHub: '/scalingHub',
-  mqtt: {
-    server: 'localhost',
-    protocol: "ws",
+  apiUrlEC: 'http://10.4.4.224:80/api/',
+  apiUrl: 'http://10.4.5.174:108/api/',
+  apiUrl2: 'http://10.4.5.174:108/api/',
+  hub: 'http://10.4.4.224:80/ec-hub',
+  scalingHub: 'http://10.4.4.224:80/ec-hub',
+  scalingHubLocal: 'http://localhost:5001/scalingHub',
+  _mqtt: {
+    server: 'mqtt.myweb.com',
+    protocol: "wss",
     port: 1883
-  }
+  },
+  get mqtt() {
+    return this._mqtt;
+  },
+  set mqtt(value) {
+    this._mqtt = value;
+  },
 };
 
 /*

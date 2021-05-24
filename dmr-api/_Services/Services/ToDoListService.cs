@@ -1012,7 +1012,7 @@ namespace DMR_API._Services.Services
                         KindID = plan.Building.KindID != null && glue.KindID != null && glue.KindID == plan.Building.KindID ? glue.KindID ?? 0 : 0,
                         GlueNameID = glue.GlueNameID,
                         GlueName = glue.Name,
-                        ChemicalA = glue.GlueIngredients.FirstOrDefault(x => x.Position == "A").Ingredient,
+                        ChemicalA = glue.GlueIngredients.Any(x => x.Position == "A") ? glue.GlueIngredients.FirstOrDefault(x => x.Position == "A").Ingredient : null,
                     }).Where(x => x.BuildingKindID == 0).ToListAsync();
             return plansModel;
         }
@@ -1054,14 +1054,14 @@ namespace DMR_API._Services.Services
         private ResponseDetail<object> ValidateChemical(GlueForGenerateToDoListDto item)
         {
             // - Kiểm tra hóa chất lỗi cài đặt.
-            if (item.ChemicalA is null) new ResponseDetail<object>
+            if (item.ChemicalA == null) return new ResponseDetail<object>
             {
                 Status = false,
                 Message = $"Keo {item.GlueName} không có hóa chất A!"
             };
 
             var hourlyOutput = item.HourlyOutput;
-            if (hourlyOutput == 0) new ResponseDetail<object>
+            if (hourlyOutput == 0) return new ResponseDetail<object>
             {
                 Status = false,
                 Message = $"Vui lòng thêm sản lượng hàng giờ cho chuyền {item.Building.Name}!"
