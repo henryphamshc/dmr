@@ -57,6 +57,7 @@
                         <ng-template #editTemplate let-data>
                             <ejs-dropdownlist #chemicalDropdownlist [dataSource]='bpfcData'
                                 [value]="data.bpfcEstablishName" [fields]='fieldsBPFC'
+                                (filtering)='onFiltering($event)' 
                                 [allowFiltering]='true' (change)='onChangeBPFC($event)'>
                             </ejs-dropdownlist>
                         </ng-template>
