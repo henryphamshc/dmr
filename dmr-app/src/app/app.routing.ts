@@ -1,4 +1,3 @@
-import { LayoutComponent } from './views/layout/layout/layout.component';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 

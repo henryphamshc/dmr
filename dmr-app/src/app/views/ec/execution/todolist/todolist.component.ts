@@ -362,6 +362,9 @@ export class TodolistComponent implements OnInit, OnDestroy, AfterViewInit {
         case this.TODO:
           this.todoSTF();
           break;
+          case this.BONDING_GAP:
+          this.bondingGap();
+          break;
         case this.DELAY:
           this.undoneSTF();
           break;
@@ -383,6 +386,9 @@ export class TodolistComponent implements OnInit, OnDestroy, AfterViewInit {
         case this.TODO:
           this.todo();
           break;
+          case this.BONDING_GAP:
+            this.bondingGap();
+            break;
         case this.DELAY:
           this.delay();
           break;
@@ -548,9 +554,11 @@ export class TodolistComponent implements OnInit, OnDestroy, AfterViewInit {
     }, err => this.spinner.hide());
   }
   bondingGap() {
+    this.spinner.show();
     this.additionService.getAllByBuildingID(this.buildingID).subscribe(data => {
       this.bondingGapData = data;
-    });
+      this.spinner.hide();
+    }, err => this.spinner.hide());
   }
   done() {
     this.spinner.show();
@@ -628,15 +636,13 @@ export class TodolistComponent implements OnInit, OnDestroy, AfterViewInit {
     // };
   }
   createdTodo() {
-    const tab = window.location.pathname;
+    // const tabsTest = this.route.snapshot.params.tab;
+    const tab = this.route.snapshot.params.tab || '';
     for (const item of this.tabs) {
-      if (tab.includes(`-2/${item}`)) {
+      if (tab === item) {
         this.focusDone = item;
         this.isShowTab = item;
         break;
-      } else {
-        this.focusDone = this.TODO;
-        this.isShowTab = this.TODO;
       }
     }
     console.log('oninit', this.isShowTab, this.focusDone);
@@ -717,6 +723,16 @@ export class TodolistComponent implements OnInit, OnDestroy, AfterViewInit {
         doneButton?.classList.remove('todo');
         bondingGapButton?.classList.remove('todo');
         break;
+        case this.BONDING_GAP:
+          bondingGapButton?.classList.add('todo');
+  
+          todoButton?.classList.remove('todo');
+          delayButton?.classList.remove('todo');
+          dispatchButton?.classList.remove('todo');
+          delayDispatchButton?.classList.remove('todo');
+          doneButton?.classList.remove('todo');
+          EVAUVButton?.classList.remove('todo');
+          break;
     }
     if (todoButton !== null) {
         todoButton.onclick = (): void => {
@@ -862,11 +878,14 @@ export class TodolistComponent implements OnInit, OnDestroy, AfterViewInit {
       case 'addition':
         this.openAddition();
         break;
-      case 'bondingGap':
-        this.bondingGap();
-        this.isShowTab = this.BONDING_GAP;
-        this.focusDone = this.BONDING_GAP;
-        break;
+        case 'bondingGap':
+          this.bondingGap();
+          this.isShowTab = this.BONDING_GAP;
+          this.focusDone = this.BONDING_GAP;
+          this.router.navigate([
+            `/ec/execution/todolist-2/${this.BONDING_GAP}`,
+          ]);
+          break;
       case 'done':
         this.isShowTab = this.DONE;
         this.focusDone = this.DONE;

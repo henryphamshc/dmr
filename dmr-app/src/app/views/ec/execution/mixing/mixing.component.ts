@@ -1,24 +1,27 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HubConnectionBuilder } from '@microsoft/signalr';
-import { Subject, Subscription } from 'rxjs';
+import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { IBuilding } from 'src/app/_core/_model/building';
-import { IMixingInfo } from 'src/app/_core/_model/plan';
-import { IRole } from 'src/app/_core/_model/role.js';
 import { IIngredient } from 'src/app/_core/_model/summary';
 import { AbnormalService } from 'src/app/_core/_service/abnormal.service';
 import { AlertifyService } from 'src/app/_core/_service/alertify.service';
 import { IngredientService } from 'src/app/_core/_service/ingredient.service';
 import { MakeGlueService } from 'src/app/_core/_service/make-glue.service';
-import { SettingService } from 'src/app/_core/_service/setting.service';
+// import * as signalr from '../../../../assets/js/ec-client.js';
+// import * as signalr from '../../../../assets/js/weighing-scale-client.js';
+import { NgxSpinnerService } from 'ngx-spinner';
 
 import { debounceTime } from 'rxjs/operators';
-import { IScanner } from 'src/app/_core/_model/IToDoList';
-import { IMixingDetailForResponse } from 'src/app/_core/_model/IMixingInfo';
-import { environment } from 'src/environments/environment';
 import { MixingService } from 'src/app/_core/_service/mixing.service';
 import { AutoSelectDirective } from '../../select.directive';
+import { IMixingDetailForResponse } from 'src/app/_core/_model/IMixingInfo';
+import { IScanner } from 'src/app/_core/_model/IToDoList';
+import { IMixingInfo } from 'src/app/_core/_model/plan';
+import { IRole } from 'src/app/_core/_model/role';
+import { SettingService } from 'src/app/_core/_service/setting.service';
 import { TodolistService } from 'src/app/_core/_service/todolist.service';
+import { environment } from 'src/environments/environment';
 
 const SUMMARY_RECIEVE_SIGNALR = 'ok';
 const BIG_MACHINE_UNIT = 'k';
@@ -88,6 +91,7 @@ export class MixingComponent implements OnInit, OnDestroy {
     private abnormalService: AbnormalService,
     private mixingService: MixingService,
     private router: Router,
+    private spinner: NgxSpinnerService,
     private settingService: SettingService,
     public todolistService: TodolistService
   ) {
@@ -152,17 +156,11 @@ export class MixingComponent implements OnInit, OnDestroy {
         const item = arg.ingredient;
         this.ingredientsTamp = item;
         this.position = item.position;
-        // const input = args.split('-') || [];
-        // const dateAndBatch = /(\d+)-(\w+)-/g;
-        // const validFormat = args.match(dateAndBatch);
-        // const qrcode = args.replace(validFormat[0], '');
-
-        // Update 08/04/2021 - Leo
-        const input = args.split('    ') || [];
-        const qr = item.partNO;
-        const qrcode = input[2].split(":")[1].trim() + ':' + input[0].split(":")[1].trim().replace(' ', '').toUpperCase();
-        // const qr = args.match(item.materialNO);
-         // End update
+        const input = args.split('-') || [];
+        const dateAndBatch = /(\d+)-(\w+)-/g;
+        const qr = args.match(item.materialNO);
+        const validFormat = args.match(dateAndBatch);
+        const qrcode = args.replace(validFormat[0], '');
         if (qr === null) {
           this.alertify.warning(`Mã QR không hợp lệ!<br>The QR Code invalid!`);
           this.qrCode = '';
@@ -172,15 +170,15 @@ export class MixingComponent implements OnInit, OnDestroy {
         if (qr !== null) {
           try {
             // check neu batch va code giong nhau
-            if (qrcode !== qr) {
+            if (qrcode !== qr[0]) {
               this.alertify.warning(`Mã QR không hợp lệ!<br>Please you should look for the chemical name "${item.name}"`);
               this.qrCode = '';
               this.errorScan();
               return;
             }
-            this.qrCode = qr;
+            this.qrCode = qr[0];
             // const result = await this.scanQRCode();
-            if (this.qrCode !== item.partNO) { // Update 08/04/2021 - Leo
+            if (this.qrCode !== item.materialNO) {
               this.alertify.warning(`Mã QR không hợp lệ!<br>Please you should look for the chemical name "${item.name}"`);
               this.qrCode = '';
               this.errorScan();
@@ -260,6 +258,7 @@ export class MixingComponent implements OnInit, OnDestroy {
             this.errorScan();
             this.alertify.error('Mã QR không hợp lệ!<br>Wrong Chemical!');
             this.qrCode = '';
+            return;
           }
         }
       }
@@ -277,6 +276,7 @@ export class MixingComponent implements OnInit, OnDestroy {
     });
   }
   getGlueWithIngredientByGlueID() {
+    this.spinner.show();
     this.makeGlueService
       .getGlueWithIngredientByGlueID(this.glueID)
       .subscribe((res: any) => {
@@ -287,7 +287,6 @@ export class MixingComponent implements OnInit, OnDestroy {
             code: item.code,
             scanCode: '',
             materialNO: item.materialNO,
-            partNO: item.partNO,
             name: item.name,
             percentage: item.percentage,
             position: item.position,
@@ -305,6 +304,9 @@ export class MixingComponent implements OnInit, OnDestroy {
         });
         this.glueName = res.name;
         this.getMixingDetail();
+        this.spinner.hide();
+      }, err => {
+        this.spinner.hide();
       });
   }
 

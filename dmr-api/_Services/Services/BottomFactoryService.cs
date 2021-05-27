@@ -182,8 +182,8 @@ namespace DMR_API._Services.Services
 
         public async Task<ToDoListForReturnDto> DelayList(int buildingID)
         {
-            var userID = _jwtService.GetUserID();
-            var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
+           // var userID = _jwtService.GetUserID();
+            //var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
             var currentTime = DateTime.Now.ToLocalTime();
             currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, 0);
             var currentDate = currentTime.Date;
@@ -260,8 +260,8 @@ namespace DMR_API._Services.Services
 
         public async Task<DispatchListForReturnDto> DispatchList(int buildingID)
         {
-            var userID = _jwtService.GetUserID();
-            var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
+            //var userID = _jwtService.GetUserID();
+            //var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
 
             try
             {
@@ -345,8 +345,8 @@ namespace DMR_API._Services.Services
 
         public async Task<ToDoListForReturnDto> DoneList(int buildingID)
         {
-            var userID = _jwtService.GetUserID();
-            var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
+           // var userID = _jwtService.GetUserID();
+            //var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
             var currentTime = DateTime.Now.ToLocalTime();
             var currentDate = currentTime.Date;
             var value = currentTime.ToString("tt", CultureInfo.InvariantCulture);
@@ -421,8 +421,8 @@ namespace DMR_API._Services.Services
 
         public async Task<ToDoListForReturnDto> EVA_UVList(int buildingID)
         {
-            var userID = _jwtService.GetUserID();
-            var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
+            //var userID = _jwtService.GetUserID();
+            //var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
             var currentTime = DateTime.Now.ToLocalTime();
             currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, 0);
             var currentDate = currentTime.Date;
@@ -667,8 +667,8 @@ namespace DMR_API._Services.Services
 
         public async Task<ToDoListForReturnDto> UndoneList(int buildingID)
         {
-            var userID = _jwtService.GetUserID();
-            var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
+           // var userID = _jwtService.GetUserID();
+            //var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
             var currentTime = DateTime.Now.ToLocalTime();
             currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, 0);
             var currentDate = currentTime.Date;
@@ -990,8 +990,8 @@ namespace DMR_API._Services.Services
         {
             try
             {
-                var userID = _jwtService.GetUserID();
-                var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
+                //var userID = _jwtService.GetUserID();
+                //var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
 
                 var currentTime = DateTime.Now.ToLocalTime();
                 currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, 0);

@@ -164,8 +164,8 @@ namespace DMR_API._Services.Services
 
             // Nếu TG hiện tại là buổi sáng -> lấy buổi sáng, ngược lại lấy cả ngày
             var response = new ToDoListForReturnDto();
-            var userID = _jwtService.GetUserID();
-            var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
+            //var userID = _jwtService.GetUserID();
+            //var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
             var currentTime = DateTime.Now.ToLocalTime();
             var currentDate = currentTime.Date;
             var value = currentTime.ToString("tt", CultureInfo.InvariantCulture);
@@ -313,8 +313,8 @@ namespace DMR_API._Services.Services
             // Nhiệm vụ thì chỉ có hóa chất chưa nhiều keo phân biệt bằng (" + ")
 
             // Nếu TG hiện tại là buổi sáng -> lấy buổi sáng, ngược lại lấy cả ngày
-            var userID = _jwtService.GetUserID();
-            var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
+           // var userID = _jwtService.GetUserID();
+            //var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
             var currentTime = DateTime.Now.ToLocalTime();
             currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, 0);
             var currentDate = currentTime.Date;
@@ -400,8 +400,8 @@ namespace DMR_API._Services.Services
             // Nếu TG hiện tại là buổi sáng -> lấy buổi sáng, ngược lại lấy cả ngày
             try
             {
-                var userID = _jwtService.GetUserID();
-                var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
+                //var userID = _jwtService.GetUserID();
+                // var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
 
                 var currentTime = DateTime.Now.ToLocalTime();
                 currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, 0);
@@ -474,7 +474,7 @@ namespace DMR_API._Services.Services
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                throw;
+               return new ToDoListForReturnDto();
             }
 
         }
@@ -533,8 +533,8 @@ namespace DMR_API._Services.Services
 
         public async Task<DispatchListForReturnDto> DispatchList(int buildingID)
         {
-            var userID = _jwtService.GetUserID();
-            var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
+            //var userID = _jwtService.GetUserID();
+            // var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
 
             try
             {
@@ -619,8 +619,8 @@ namespace DMR_API._Services.Services
 
         public async Task<DispatchListForReturnDto> DispatchListDelay(int buildingID)
         {
-            var userID = _jwtService.GetUserID();
-            var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
+            //var userID = _jwtService.GetUserID();
+            // var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
             try
             {
                 var currentTime = DateTime.Now.ToLocalTime();
@@ -634,15 +634,16 @@ namespace DMR_API._Services.Services
                        && x.EstimatedFinishTime.Date == currentDate
                        && x.BuildingID == buildingID)
                    .ToListAsync();
-                if (role.RoleID == (int)Enums.Role.Dispatcher)
+                
+                 var lines = await _repoBuildingUser.FindAll().Include(x => x.Building).Where(x => x.Building.ParentID == buildingID).Select(x => x.BuildingID).ToListAsync();
+                if (lines.Count > 0)
                 {
-                    var lines = await _repoBuildingUser.FindAll().Include(x => x.Building).Where(x => x.Building.ParentID == buildingID).Select(x => x.BuildingID).ToListAsync();
                     model = model.Where(x => lines.Contains(x.LineID)).ToList();
                 }
                 else
                 {
-                    var lines = await _repoBuilding.FindAll().Where(x => x.ParentID == buildingID).Select(x => x.ID).ToListAsync();
-                    model = model.Where(x => lines.Contains(x.LineID)).ToList();
+                    var allLines = await _repoBuilding.FindAll().Where(x => x.ParentID == buildingID).Select(x => x.ID).ToListAsync();
+                    model = model.Where(x => allLines.Contains(x.LineID)).ToList();
                 }
                 // map to dto
                 var dispatchList = MapToDispatchListDto(model);
@@ -719,8 +720,8 @@ namespace DMR_API._Services.Services
 
             try
             {
-                var userID = _jwtService.GetUserID();
-                var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
+                //var userID = _jwtService.GetUserID();
+                //var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
 
                 var currentTime = DateTime.Now.ToLocalTime();
                 currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, 0);
@@ -734,15 +735,16 @@ namespace DMR_API._Services.Services
                        && x.BuildingID == buildingID)
                    .ToListAsync();
                 ///
-                if (role.RoleID == (int)Enums.Role.Dispatcher)
+                 var lines = await _repoBuildingUser.FindAll().Include(x => x.Building).Where(x => x.Building.ParentID == buildingID).Select(x => x.BuildingID).ToListAsync();
+
+                if (lines.Count > 0)
                 {
-                    var lines = await _repoBuildingUser.FindAll().Include(x => x.Building).Where(x => x.Building.ParentID == buildingID).Select(x => x.BuildingID).ToListAsync();
                     model = model.Where(x => lines.Contains(x.LineID)).ToList();
                 }
                 else
                 {
-                    var lines = await _repoBuilding.FindAll().Where(x => x.ParentID == buildingID).Select(x => x.ID).ToListAsync();
-                    model = model.Where(x => lines.Contains(x.LineID)).ToList();
+                    var allLines = await _repoBuilding.FindAll().Where(x => x.ParentID == buildingID).Select(x => x.ID).ToListAsync();
+                    model = model.Where(x => allLines.Contains(x.LineID)).ToList();
                 }
 
                 // map dto
@@ -752,7 +754,7 @@ namespace DMR_API._Services.Services
             }
             catch
             {
-                throw;
+               return new ToDoListForReturnDto(new List<ToDoListDto>(), 0, 0, 0, 0);
             }
 
         }
@@ -772,7 +774,7 @@ namespace DMR_API._Services.Services
                        && x.EstimatedFinishTime.Date == currentDate
                        && x.BuildingID == buildingID)
                    .ToListAsync()).DistinctBy(x => x.GlueName).ToList();
-
+            
                 // map dto
                 var result = MapToDispatchListDto(model);
                 return new DispatchListForReturnDto(result, 0, 0, 0, 0);
@@ -789,8 +791,8 @@ namespace DMR_API._Services.Services
         // Data of Dispatch Modal
         public async Task<List<DispatchDetailDto>> GetDispatchDetail(int buildingID, int glueNameID, DateTime estimatedStartTime, DateTime estimatedFinsihTime)
         {
-            var userID = _jwtService.GetUserID();
-            var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
+            //var userID = _jwtService.GetUserID();
+            // var role = await _userRoleRepository.FindAll(x => x.UserID == userID).FirstOrDefaultAsync();
             var dispatchlist = await _repoDispatch.FindAll(x => x.GlueNameID == glueNameID
                                 && x.EstimatedStartTime == estimatedStartTime
                                 && !x.IsDelete
@@ -806,16 +808,18 @@ namespace DMR_API._Services.Services
                             })
                             .ToListAsync();
             // decentralzation
-            if (role.RoleID == (int)Enums.Role.Dispatcher)
-            {
-                var lines = await _repoBuildingUser.FindAll().Include(x => x.Building).Where(x => x.Building.ParentID == buildingID).Select(x => x.BuildingID).ToListAsync();
-                dispatchlist = dispatchlist.Where(x => lines.Contains(x.LineID)).ToList();
-            }
-            else if (role.RoleID == (int)Enums.Role.Admin || role.RoleID == (int)Enums.Role.Supervisor || role.RoleID == (int)Enums.Role.Staff || role.RoleID == (int)Enums.Role.Worker)
-            {
-                var lines = await _repoBuilding.FindAll().Where(x => x.ParentID == buildingID).Select(x => x.ID).ToListAsync();
-                dispatchlist = dispatchlist.Where(x => lines.Contains(x.LineID)).ToList();
-            }
+             var lines = await _repoBuildingUser.FindAll().Include(x => x.Building).Where(x => x.Building.ParentID == buildingID).Select(x => x.BuildingID).ToListAsync();
+
+                if (lines.Count > 0)
+                {
+                    dispatchlist = dispatchlist.Where(x => lines.Contains(x.LineID)).ToList();
+                }
+                else
+                {
+                    var allLines = await _repoBuilding.FindAll().Where(x => x.ParentID == buildingID).Select(x => x.ID).ToListAsync();
+                    dispatchlist = dispatchlist.Where(x => allLines.Contains(x.LineID)).ToList();
+                }
+
             return dispatchlist;
         }
 

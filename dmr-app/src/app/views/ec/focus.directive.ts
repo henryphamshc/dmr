@@ -10,7 +10,7 @@ export class AutofocusDirective implements AfterViewInit {
     setTimeout( () => {
       this.host.nativeElement.focus();
       this.host.nativeElement.select();
-    }, 5000);
+    }, 300);
   }
   @HostListener('focus') onBlur() {
     setTimeout( () => {

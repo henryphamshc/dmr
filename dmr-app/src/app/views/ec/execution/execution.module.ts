@@ -9,7 +9,7 @@ import { NgxSpinnerModule } from 'ngx-spinner';
 // Components Routing
 import { NgSelectModule } from '@ng-select/ng-select';
 
-import { DropDownListModule, MultiSelectModule } from '@syncfusion/ej2-angular-dropdowns';
+import { DropDownListAllModule, DropDownListModule, MultiSelectAllModule, MultiSelectModule } from '@syncfusion/ej2-angular-dropdowns';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 // Import ngx-barcode module
 import { BarcodeGeneratorAllModule, DataMatrixGeneratorAllModule } from '@syncfusion/ej2-angular-barcode-generator';
@@ -111,7 +111,8 @@ loadCldr(
     CountdownModule,
     ToolbarModule,
     CheckBoxModule,
-    MultiSelectModule,
+    MultiSelectAllModule,
+    DropDownListAllModule,
     CoreDirectivesModule,
     FocusDirectivesModule,
     TranslateModule.forChild({

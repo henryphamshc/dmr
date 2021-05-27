@@ -23,11 +23,11 @@
               </button>
             </ng-template>
           </e-item>
-          <e-item prefixIcon='fa fa-cut' tooltipText="{{'Addition2' | translate}}">
+          <e-item prefixIcon='fa fa-plus-square-o' tooltipText="{{'Addition2' | translate}}">
             <ng-template #template>
               <button type="button" (click)='openAddition2()'
                 class="e-tbar-btn e-tbtn-txt e-control e-btn e-lib">
-                <i class="e-btn-icon e-icons e-icon-left fas fa-plus"></i>
+                <i class="e-btn-icon e-icons e-icon-left fas fa-plus-square"></i>
                 <span class="e-tbar-btn-text">
                   {{'Addition2' | translate}}
                 </span>
@@ -91,6 +91,7 @@
             text=" {{ 'Delay' | translate }} ({{delayDispatchTotal}})"></e-item>
           <e-item type='Separator'></e-item>
           <e-item id='done' prefixIcon='fa fa-check' text=" {{ 'Done' | translate }} ({{doneTotal}})"></e-item>
+          <e-item id='bondingGap' prefixIcon='fa fa-plus-square' text=" {{ 'Addition2' | translate }} "></e-item>
           <e-item align='right'>
             <ng-template #template>
               <div class="e-toolbar-item e-search-wrapper e-toolbar-right" aria-disabled="false" title="Search">
