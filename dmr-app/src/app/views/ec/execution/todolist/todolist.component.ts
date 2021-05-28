@@ -277,6 +277,8 @@ export class TodolistComponent implements OnInit, OnDestroy, AfterViewInit {
     this.authService.getBuildingUserByUserID(userID).subscribe((res) => {
       this.buildings = res.data;
       callback();
+    }, err => {
+      console.log('getBuildingUserByUserID', err);
     });
   }
   cancelRange(): void {

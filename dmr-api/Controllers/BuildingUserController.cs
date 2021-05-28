@@ -52,16 +52,16 @@ namespace DMR_API.Controllers
             var result = await _buildingUserService.RemoveBuildingUser(buildingUserDto);
             return Ok(result);
         }
-        [HttpGet("{userid}/{buildingid}")]
-        public async Task<IActionResult> MapBuildingUser(int userid, int buildingid)
+        [HttpGet("{userID}/{buildingid}")]
+        public async Task<IActionResult> MapBuildingUser(int userID, int buildingid)
         {
-            var result = await _buildingUserService.MapBuildingUser(userid, buildingid);
+            var result = await _buildingUserService.MapBuildingUser(userID, buildingid);
             return Ok(result);
         }
         [HttpGet("{userID}/{buildingid}")]
-        public async Task<IActionResult> GetLineByUserID(int userid, int buildingid)
+        public async Task<IActionResult> GetLineByUserID(int userID, int buildingid)
         {
-            var result = await _buildingUserService.GetLineByUserID(userid, buildingid);
+            var result = await _buildingUserService.GetLineByUserID(userID, buildingid);
             return Ok(result);
         }
         [HttpPost]
@@ -82,15 +82,15 @@ namespace DMR_API.Controllers
 
 
         [HttpGet("{userID}")]
-        public async Task<IActionResult> GetBuildingByUserID(int userid)
+        public async Task<IActionResult> GetBuildingByUserID(int userID)
         {
-            var result = await _buildingUserService.GetBuildingByUserID(userid);
+            var result = await _buildingUserService.GetBuildingByUserID(userID);
             return Ok(result);
         }
         [HttpGet("{userID}")]
-        public async Task<IActionResult> GetBuildingUserByUserID(int userid)
+        public async Task<IActionResult> GetBuildingUserByUserID(int userID)
         {
-            var result = await _buildingUserService.GetBuildingUserByUserID(userid);
+            var result = await _buildingUserService.GetBuildingUserByUserID(userID);
             return Ok(result);
         }
         [HttpPost]

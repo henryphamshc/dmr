@@ -437,10 +437,10 @@ namespace DMR_API._Services.Services
                             Status = c == null ? false : true,
                             Name = a.Name
                         };
-
+            var data = await model.ToListAsync();    
             return new ResponseDetail<List<BuildingDto>>
             {
-                Data = await model.ToListAsync(),
+                Data = data,
                 Status = true
             };
         }

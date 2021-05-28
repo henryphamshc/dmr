@@ -19,11 +19,11 @@ namespace DMR_API._Repositories.Repositories
 
         public async Task<bool> CheckExists(int id)
         {
-            return await _context.Ingredients.AnyAsync(x => x.ID == id);
+            return await _context.Ingredients.AnyAsync(x => x.isShow && x.ID == id);
         }
         public async Task<bool> CheckBarCodeExists(string code)
         {
-            return await _context.Ingredients.AnyAsync(x => x.MaterialNO.Equals(code));
+            return await _context.Ingredients.AnyAsync(x => x.isShow && x.MaterialNO.Equals(code));
         }
 
     }

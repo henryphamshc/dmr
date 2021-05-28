@@ -1445,7 +1445,9 @@ namespace DMR_API._Services.Services
                     // B4: Vào bảng Todolist lấy hết danh sách ra theo planID điều kiện là isdelete = true nếu có tăng ca thì mở lại, Cập nhật lại là false
 
                     var timeOfDay = ct.ToRemoveSecond().TimeOfDay;
-                    var todoDelete = await _repoToDoList.FindAll(x => x.EstimatedStartTime.TimeOfDay >= timeOfDay && x.PlanID == planID && x.IsDelete == true).ToListAsync();
+                    var dueDate = planUpdate.DueDate.Date;
+
+                    var todoDelete = await _repoToDoList.FindAll(x => x.EstimatedStartTime.Date == dueDate &&  x.EstimatedStartTime.TimeOfDay >= timeOfDay && x.PlanID == planID && x.IsDelete == true).ToListAsync();
                     // Neu khong tang ca thi khoi mo tang ca ra
                     if (planUpdate.IsOvertime == false)
                     {
@@ -1459,11 +1461,11 @@ namespace DMR_API._Services.Services
                     await _repoToDoList.SaveAll();
 
                     // B5: Vào bảng DispatchList lấy hết danh sách ra theo planID điều kiện là isdelete = true Neu khong tang ca thi khoi mo tang ca ra, Cập nhật lại là false
-                    var deletingList = await _repoDispatchList.FindAll(x => x.EstimatedStartTime.TimeOfDay >= timeOfDay && x.EstimatedFinishTime.TimeOfDay > timeOfDay && x.PlanID == planID && x.IsDelete == true).ToListAsync();
+                    var deletingList = await _repoDispatchList.FindAll(x => x.EstimatedStartTime.Date == dueDate && x.EstimatedStartTime.TimeOfDay >= timeOfDay && x.EstimatedFinishTime.TimeOfDay > timeOfDay && x.PlanID == planID && x.IsDelete == true).ToListAsync();
                     // Neu khong tang ca thi khoi mo tang ca ra
                     if (planUpdate.IsOvertime == false)
                     {
-                        deletingList = deletingList.Where(x => x.EstimatedStartTime.TimeOfDay < finishWorkingTimeOfWorkplan.TimeOfDay).ToList();
+                        deletingList = deletingList.Where(x => x.EstimatedStartTime.Date == dueDate && x.EstimatedStartTime.TimeOfDay < finishWorkingTimeOfWorkplan.TimeOfDay).ToList();
                     }
                     deletingList.ForEach(item =>
                     {
@@ -1492,7 +1494,7 @@ namespace DMR_API._Services.Services
             }
         }
 
-        public async Task<ResponseDetail<object>> Offline(int planID)
+         public async Task<ResponseDetail<object>> Offline(int planID)
         {
             // B1: Túm cổ từ trong database ra
 
@@ -1530,8 +1532,8 @@ namespace DMR_API._Services.Services
 
 
                     // B3: Vào bảng Todolist lấy hết danh sách ra theo planID điều kiện là isdelete = false, Cập nhật lại là true
-
-                    var todoDelete = await _repoToDoList.FindAll(x => x.EstimatedStartTime.TimeOfDay >= timeOfDay && x.PlanID == planID && x.IsDelete == false).ToListAsync();
+                    var dueDate = planUpdate.DueDate.Date;
+                    var todoDelete = await _repoToDoList.FindAll(x => x.EstimatedStartTime.Date == dueDate &&x.EstimatedStartTime.TimeOfDay >= timeOfDay && x.PlanID == planID && x.IsDelete == false).ToListAsync();
                     todoDelete.ForEach(item =>
                     {
                         item.IsDelete = true;
@@ -1540,7 +1542,7 @@ namespace DMR_API._Services.Services
                     await _repoToDoList.SaveAll();
 
                     // B4: Vào bảng DispatchList lấy hết danh sách ra theo planID điều kiện là isdelete = false, Cập nhật lại là true
-                    var deletingList = await _repoDispatchList.FindAll(x => x.EstimatedStartTime.TimeOfDay >= timeOfDay && x.EstimatedFinishTime.TimeOfDay > timeOfDay && x.PlanID == planID && x.IsDelete == false).ToListAsync();
+                    var deletingList = await _repoDispatchList.FindAll(x =>  x.EstimatedStartTime.Date == dueDate && x.EstimatedStartTime.TimeOfDay >= timeOfDay && x.EstimatedFinishTime.TimeOfDay > timeOfDay && x.PlanID == planID && x.IsDelete == false).ToListAsync();
                     deletingList.ForEach(item =>
                     {
                         item.IsDelete = true;
@@ -1567,7 +1569,6 @@ namespace DMR_API._Services.Services
                 }
             }
         }
-
         // Khong su dung
         public Task<bool> EditDelivered(int id, string qty)
         {

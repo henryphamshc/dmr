@@ -77,7 +77,7 @@ namespace DMR_API.Data
 
         public async Task<bool> SaveAll()
         {
-            return await _context.SaveChangesAsync() > 0;
+            return await _context.SaveChangesAsync(true) > 0;
         }
 
         public void Update(T entity)
@@ -91,7 +91,7 @@ namespace DMR_API.Data
 
         public void Save()
         {
-             _context.SaveChanges();
+             _context.SaveChanges(true);
         }
 
         public void UpdateRange(List<T> entities)

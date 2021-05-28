@@ -18,11 +18,11 @@ import { JwtInterceptor } from '@auth0/angular-jwt';
     //   deps: [AuthenticationService],
     // },
     // { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: UnauthorizedInterceptor,
-      multi: true,
-    },
+    // {
+    //   provide: HTTP_INTERCEPTORS,
+    //   useClass: UnauthorizedInterceptor,
+    //   multi: true,
+    // },
   ],
 })
 export class CoreModule {

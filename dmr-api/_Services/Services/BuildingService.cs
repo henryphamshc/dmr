@@ -127,7 +127,7 @@ namespace DMR_API._Services.Services
         public async Task<List<BuildingDto>> GetBuildings()
         {
             var userid = _jwtService.GetUserID();
-            var role = await _userRoleRepository.FindAll(x => x.UserID == userid).AsNoTracking().FirstOrDefaultAsync();
+            // var role = await _userRoleRepository.FindAll(x => x.UserID == userid).FirstOrDefaultAsync();
            var model = await _buildingUserRepository.FindAll(x => x.UserID == userid)
                         .Include(x => x.Building).ThenInclude(x => x.Kind).Select(x => new BuildingDto
                         {
@@ -138,7 +138,12 @@ namespace DMR_API._Services.Services
                             IsSTF = x.Building.Kind == null ? false : true,
                         }).ToListAsync();
             if (model.Count == 0) {
-                return await _repoBuilding.FindAll().Include(x => x.LunchTime).Include(x => x.Kind).Where(x => x.Level != 5).ProjectTo<BuildingDto>(_configMapper).OrderBy(x => x.Level).ToListAsync();
+                return await _repoBuilding.FindAll()
+                .Include(x => x.LunchTime)
+                .Include(x => x.Kind)
+                .Where(x => x.Level != 5)
+                .ProjectTo<BuildingDto>(_configMapper)
+                .OrderBy(x => x.Level).ToListAsync();
             }
             return model;
             // switch (role.RoleID)

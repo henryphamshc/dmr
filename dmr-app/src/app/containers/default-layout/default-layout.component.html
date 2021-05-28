@@ -1,6 +1,6 @@
 <ngx-spinner [fullScreen]="true" type="square-jelly-box" size="medium">
 </ngx-spinner>
-<app-header [navbarBrandRouterLink]="['/']" [fixed]="true"
+<app-header [navbarBrandRouterLink]="['/']" [fixed]="true" 
   [navbarBrandFull]="{src: 'assets/img/logo.png', width: 50, height: 25, alt: 'Logo'}"
   [navbarBrandMinimized]="{src: 'assets/img/logo.png', width: 25, height: 25, alt: 'Logo'}" [sidebarToggler]="'lg'"
   [asideMenuToggler]="'lg'"
@@ -52,7 +52,7 @@
   </ul>
 </app-header>
 <div class="app-body">
-  <app-sidebar #appSidebar [fixed]="true" [display]="'lg'" [minimized]="sidebarMinimized"
+  <app-sidebar #appSidebar [fixed]="true" [display]='false' [minimized]="sidebarMinimized"
     (minimizedChange)="toggleMinimize($event)">
     <app-sidebar-nav [navItems]="navItems" [perfectScrollbar] [disabled]="appSidebar.minimized"></app-sidebar-nav>
   </app-sidebar>
