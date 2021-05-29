@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace DMR_API.Data
 {
@@ -32,5 +33,6 @@ namespace DMR_API.Data
         Task<bool> SaveAll();
         void Save();
         void AddRange(List<T> entity);
+        IDbContextTransaction BeginTransaction();
     }
 }

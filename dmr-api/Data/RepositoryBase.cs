@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace DMR_API.Data
 {
@@ -77,7 +78,7 @@ namespace DMR_API.Data
 
         public async Task<bool> SaveAll()
         {
-            return await _context.SaveChangesAsync(true) > 0;
+            return await _context.SaveChangesAsync() > 0;
         }
 
         public void Update(T entity)
@@ -91,7 +92,7 @@ namespace DMR_API.Data
 
         public void Save()
         {
-             _context.SaveChanges(true);
+             _context.SaveChanges();
         }
 
         public void UpdateRange(List<T> entities)
@@ -119,6 +120,11 @@ namespace DMR_API.Data
                 }
             }
             //_context.Set<T>().UpdateRange(entities);
+        }
+
+        public IDbContextTransaction BeginTransaction()
+        {
+            return  _context.Database.BeginTransaction();
         }
     }
 }

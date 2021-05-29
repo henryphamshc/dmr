@@ -30,11 +30,7 @@ namespace DMR_API.Helpers.Extensions
             // Configure DbContext with Scoped lifetime 
             var appsettings = configuration.GetSection("Appsettings").Get<Appsettings>();
             services.AddSingleton(appsettings);
-            services.AddDbContextPool<DataContext>(
-                options => options.UseSqlServer(
-                    configuration.GetConnectionString("DefaultConnection"),
-                    providerOptions => providerOptions.EnableRetryOnFailure()
-                    ));
+            services.AddDbContextPool<DataContext>(options => options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
             services.AddDbContext<IoTContext>(options => options.UseMySQL(configuration.GetConnectionString("IoTConnection")));
 
             services.Configure<MongoDbSettings>(configuration.GetSection("MongoDbSettings"));

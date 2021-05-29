@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace DMR_API.Data
 {
@@ -119,6 +120,11 @@ namespace DMR_API.Data
                 }
             }
             //_context.Set<T>().UpdateRange(entities);
+        }
+
+        public IDbContextTransaction BeginTransaction()
+        {
+            return  _context.Database.BeginTransaction();
         }
     }
 }
