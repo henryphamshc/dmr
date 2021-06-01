@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using DMR_API._Repositories;
 using dmr_api.Models;
 using System.Transactions;
+using DMR_API.Data;
 
 namespace DMR_API._Services.Services
 {
@@ -21,6 +22,7 @@ namespace DMR_API._Services.Services
         private readonly IDispatchRepository _repoDispatch;
         private readonly IToDoListService _toDoListService;
         private readonly IPlanService _planService;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMixingInfoRepository _repoMixingInfo;
         private readonly IStationRepository _repoStation;
         private readonly IMapper _mapper;
@@ -29,6 +31,7 @@ namespace DMR_API._Services.Services
             IDispatchRepository repoDispatch,
             IToDoListService toDoListService,
             IPlanService planService,
+            IUnitOfWork unitOfWork,
             IMixingInfoRepository repoMixingInfo,
             IStationRepository repoStation,
             IMapper mapper,
@@ -39,6 +42,7 @@ namespace DMR_API._Services.Services
             _repoDispatch = repoDispatch;
             _toDoListService = toDoListService;
             _planService = planService;
+            _unitOfWork = unitOfWork;
             _repoMixingInfo = repoMixingInfo;
             _repoStation = repoStation;
         }
@@ -52,31 +56,33 @@ namespace DMR_API._Services.Services
 
         public bool AddDispatching(Dispatch model)
         {
-            try
+            using var transaction = _unitOfWork.BeginTransaction();
             {
-                var mixing = _repoMixingInfo.FindById(model.MixingInfoID);
-                if (mixing == null) return false;
-                using (TransactionScope scope = new TransactionScope())
+                try
                 {
-                    _repoDispatch.Add(model);
-                    _repoDispatch.Save();
-
-                    var item = new ToDoListForUpdateDto()
+                    var mixing = _repoMixingInfo.FindById(model.MixingInfoID);
+                    if (mixing == null) return false;
                     {
-                        GlueName = mixing.GlueName,
-                        EstimatedFinishTime = mixing.EstimatedFinishTime,
-                        EstimatedStartTime = mixing.EstimatedStartTime,
-                    };
-                    _toDoListService.UpdateStiringTimeRange(item);
-                    scope.Complete();
-                    return true;
+                        _repoDispatch.Add(model);
+                        _repoDispatch.Save();
+
+                        var item = new ToDoListForUpdateDto()
+                        {
+                            GlueName = mixing.GlueName,
+                            EstimatedFinishTime = mixing.EstimatedFinishTime,
+                            EstimatedStartTime = mixing.EstimatedStartTime,
+                        };
+                        _toDoListService.UpdateStiringTimeRange(item);
+                        transaction.CommitAsync();
+                        return true;
+                    }
+                }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    return false;
                 }
             }
-            catch (Exception)
-            {
-                return false;
-            }
-            throw new NotImplementedException();
         }
         public async Task<bool> Update(Dispatch model)
         {
@@ -163,7 +169,7 @@ namespace DMR_API._Services.Services
 
             var flags = new List<bool>();
 
-            using (TransactionScope scope = new TransactionScope())
+            using var transaction =  _unitOfWork.BeginTransaction();
             {
                 try
                 {
@@ -181,12 +187,12 @@ namespace DMR_API._Services.Services
                         Dispatches = dispatchList
                     };
                     _toDoListService.UpdateDispatchTimeRange(item);
-                    scope.Complete();
+                    transaction.Commit();
                     flags.Add(true);
                 }
                 catch
                 {
-                    scope.Dispose();
+                    transaction.Rollback();
                     flags.Add(false);
                 }
             }

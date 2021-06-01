@@ -20,6 +20,8 @@ using System.Drawing;
 using Microsoft.AspNetCore.Http;
 using dmr_api.Models;
 using CodeUtility;
+using Microsoft.Data.SqlClient;
+using DMR_API.Data;
 
 namespace DMR_API._Services.Services
 {
@@ -48,6 +50,7 @@ namespace DMR_API._Services.Services
         private readonly IStationRepository _repoStation;
         private readonly IToDoListRepository _repoToDoList;
         private readonly IPeriodRepository _repoPeriod;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IDispatchListRepository _repoDispatchList;
         private readonly IMapper _mapper;
         private readonly MapperConfiguration _configMapper;
@@ -68,6 +71,7 @@ namespace DMR_API._Services.Services
             IStationRepository repoStation,
             IToDoListRepository repoToDoList,
             IPeriodRepository repoPeriod,
+            IUnitOfWork unitOfWork,
             IDispatchListRepository repoDispatchList,
             IHubContext<ECHub> hubContext,
             IJWTService jwtService,
@@ -96,6 +100,7 @@ namespace DMR_API._Services.Services
             _repoStation = repoStation;
             _repoToDoList = repoToDoList;
             _repoPeriod = repoPeriod;
+            _unitOfWork = unitOfWork;
             _repoDispatchList = repoDispatchList;
         }
 
@@ -712,51 +717,53 @@ namespace DMR_API._Services.Services
         #endregion
 
         #region Action
+      
+
         public async Task<bool> Add(PlanDto model)
         {
             var userID = _jwtService.GetUserID();
-            using var transaction = new TransactionScopeAsync().Create();
+
+            try
             {
-                try
+                var plan = _mapper.Map<Plan>(model);
+                var checkExist = await _repoPlan.FindAll()
+                    .OrderByDescending(x => x.CreatedDate)
+                    .FirstOrDefaultAsync(x =>
+                    x.BuildingID == model.BuildingID
+                    && x.DueDate.Date == model.DueDate.Date);
+                // Neu ton tai thi kiem tra xem co phai la ngung chuyen khong
+                if (checkExist != null)
                 {
-                    var plan = _mapper.Map<Plan>(model);
-                    var checkExist = await _repoPlan.FindAll()
-                        .OrderByDescending(x=> x.CreatedDate)
-                        .FirstOrDefaultAsync(x =>
-                        x.BuildingID == model.BuildingID 
-                        && x.DueDate.Date == model.DueDate.Date);
-                    // Neu ton tai thi kiem tra xem co phai la ngung chuyen khong
-                    if (checkExist != null) {
-                        if (checkExist.IsOffline) {
-                            plan.StartWorkingTime = DateTime.Now.ToRemoveSecond();
-                        } else { // Khong phai la ngung chuyen thi thong bao da ton tại
-                            return false;
-                        }
+                    if (checkExist.IsOffline)
+                    {
+                        plan.StartWorkingTime = DateTime.Now.ToRemoveSecond();
                     }
-                    DateTime dt = DateTime.Now.ToLocalTime().ToRemoveSecond();
-                    plan.CreatedDate = dt;
-                    plan.CreateBy = userID;
-                    plan.BPFCEstablishID = model.BPFCEstablishID;
-                    _repoPlan.Add(plan);
-                    await _repoPlan.SaveAll();
-                    //var stationModel = await _stationService.GetAllByPlanID(plan.ID);
-                    //await _stationService.AddRange(stationModel);
-                    transaction.Complete();
-                    await _hubContext.Clients.All.SendAsync("summaryRecieve", "ok");
-                    return true;
+                    else
+                    { // Khong phai la ngung chuyen thi thong bao da ton tại
+                        return false;
+                    }
                 }
-                catch
-                {
-                    transaction.Dispose();
-                    return false;
-                }
+                DateTime dt = DateTime.Now.ToLocalTime().ToRemoveSecond();
+                plan.CreatedDate = dt;
+                plan.CreateBy = userID;
+                plan.BPFCEstablishID = model.BPFCEstablishID;
+                _repoPlan.Add(plan);
+                await _repoPlan.SaveAll();
+                //var stationModel = await _stationService.GetAllByPlanID(plan.ID);
+                //await _stationService.AddRange(stationModel);
+                await _hubContext.Clients.All.SendAsync("summaryRecieve", "ok");
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
-
         //Cập nhật Plan
+        // Sửa lỗi transaction dùng using System.Transaction bị lỗi. Do đó sử dụng transaction của ef core sẽ k bị nữa
         public async Task<bool> Update(PlanDto model)
         {
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -776,7 +783,7 @@ namespace DMR_API._Services.Services
                     planItem.CreateBy = userID;
                     _repoPlan.Update(planItem);
                     await _repoPlan.SaveAll();
-
+                    //throw new Exception();
                     // Nếu cập nhật lại finishworkingtime thì xóa những cái sau thời gian cập nhật ở bảng todolist và dispatch
                     if (model.FinishWorkingTime.ToRemoveSecond() != oldPlan.FinishWorkingTime.ToRemoveSecond())
                     {
@@ -818,25 +825,25 @@ namespace DMR_API._Services.Services
                         }
 
                     }
-                    transaction.Complete();
+                    await transaction.CommitAsync();
                     await _hubContext.Clients.All.SendAsync("summaryRecieve", "ok");
                     return true;
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
-                    transaction.Dispose();
+                    await transaction.RollbackAsync();
                     return false;
-                    throw;
                 }
             }
 
         }
+      
 
         //Xóa Plan
         public async Task<bool> Delete(object id)
         {
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -879,12 +886,12 @@ namespace DMR_API._Services.Services
                             await _repoDispatchList.SaveAll();
                         }
                     }
-                    transaction.Complete();
+                    await transaction.CommitAsync();
                     return true;
                 }
                 catch
                 {
-                    transaction.Dispose();
+                   await transaction.RollbackAsync();
                     return false;
                 }
             }
@@ -893,7 +900,7 @@ namespace DMR_API._Services.Services
 
         public async Task<object> DeleteRange(List<int> plansDto)
         {
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -940,12 +947,12 @@ namespace DMR_API._Services.Services
                         }
                     }
 
-                    transaction.Complete();
+                   await transaction.CommitAsync();
                     return true;
                 }
                 catch
                 {
-                    transaction.Dispose();
+                    await transaction.RollbackAsync();
                     return false;
                 }
             }
@@ -1057,7 +1064,7 @@ namespace DMR_API._Services.Services
                     {
                         //var todolist = _repoToDoList.FindAll(x => x.PlanID == item.ID).ToList();
 
-                        using var scope = new TransactionScopeAsync().Create();
+                        using var transaction = await _unitOfWork.BeginTransactionAsync();
                         {
                             try
                             {
@@ -1093,12 +1100,12 @@ namespace DMR_API._Services.Services
                                 //});
                                 //_repoToDoList.AddRange(todolist);
                                 //_repoToDoList.Save();
-                                scope.Complete();
+                               await transaction.CommitAsync();
                                 flag.Add(true);
                             }
                             catch
                             {
-                                scope.Dispose();
+                               await transaction.RollbackAsync();
                                 flag.Add(false);
                             }
                         }
@@ -1295,7 +1302,7 @@ namespace DMR_API._Services.Services
             var plan = await _repoPlan.FindAll(x => x.ID == planID).FirstOrDefaultAsync();
             if (plan == null) return new ResponseDetail<object>(null, false, "Không có kế hoạch làm việc nào tồn tại!");
 
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -1308,7 +1315,7 @@ namespace DMR_API._Services.Services
                     _repoPlan.Update(plan);
                     await _repoPlan.SaveAll();
 
-                    var planLine = await _repoPlan.FindAll(x =>  x.IsOffline == false && ct.Date == x.DueDate.Date && x.BuildingID == plan.BuildingID).ToListAsync();
+                    var planLine = await _repoPlan.FindAll(x => x.IsOffline == false && ct.Date == x.DueDate.Date && x.BuildingID == plan.BuildingID).ToListAsync();
                     var startWorkingTime = ct;
                     // var check = planLine.Any(x => startWorkingTime > x.StartWorkingTime && startWorkingTime >= x.FinishWorkingTime);
                     foreach (var item in planLine)
@@ -1384,13 +1391,13 @@ namespace DMR_API._Services.Services
                         await _repoDispatchList.SaveAll();
                     }
 
-                    transaction.Complete();
+                   await transaction.CommitAsync();
                     return new ResponseDetail<object>(null, true, "Tạo kế hoạch làm việc thành công!");
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
-                    transaction.Dispose();
+                   await transaction.RollbackAsync();
                     return new ResponseDetail<object>(null, false, "Không tạo được kế hoạch làm việc!");
                 }
             }
@@ -1411,7 +1418,7 @@ namespace DMR_API._Services.Services
             // B5: Vào bảng DispatchList lấy hết danh sách ra theo planID điều kiện là isdelete = true Neu khong tang ca thi khoi mo tang ca ra, Cập nhật lại là false
             // -------------------------------------------
             // B1: Túm cổ từ trong database ra
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -1447,7 +1454,7 @@ namespace DMR_API._Services.Services
                     var timeOfDay = ct.ToRemoveSecond().TimeOfDay;
                     var dueDate = planUpdate.DueDate.Date;
 
-                    var todoDelete = await _repoToDoList.FindAll(x => x.EstimatedStartTime.Date == dueDate &&  x.EstimatedStartTime.TimeOfDay >= timeOfDay && x.PlanID == planID && x.IsDelete == true).ToListAsync();
+                    var todoDelete = await _repoToDoList.FindAll(x => x.EstimatedStartTime.Date == dueDate && x.EstimatedStartTime.TimeOfDay >= timeOfDay && x.PlanID == planID && x.IsDelete == true).ToListAsync();
                     // Neu khong tang ca thi khoi mo tang ca ra
                     if (planUpdate.IsOvertime == false)
                     {
@@ -1475,7 +1482,7 @@ namespace DMR_API._Services.Services
                     _repoDispatchList.UpdateRange(deletingList);
                     await _repoDispatchList.SaveAll();
 
-                    transaction.Complete();
+                   await transaction.CommitAsync();
                     return new ResponseDetail<object>
                     {
                         Status = true,
@@ -1484,7 +1491,7 @@ namespace DMR_API._Services.Services
                 }
                 catch (Exception ex)
                 {
-                    transaction.Dispose();
+                   await transaction.RollbackAsync();
                     return new ResponseDetail<object>
                     {
                         Status = false,
@@ -1494,7 +1501,7 @@ namespace DMR_API._Services.Services
             }
         }
 
-         public async Task<ResponseDetail<object>> Offline(int planID)
+        public async Task<ResponseDetail<object>> Offline(int planID)
         {
             // B1: Túm cổ từ trong database ra
 
@@ -1504,7 +1511,7 @@ namespace DMR_API._Services.Services
 
             // B4: Vào bảng DispatchList lấy hết danh sách ra theo planID điều kiện là isdelete = false, Cập nhật lại là true
             // ------------------------------------------------------------------
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -1533,7 +1540,7 @@ namespace DMR_API._Services.Services
 
                     // B3: Vào bảng Todolist lấy hết danh sách ra theo planID điều kiện là isdelete = false, Cập nhật lại là true
                     var dueDate = planUpdate.DueDate.Date;
-                    var todoDelete = await _repoToDoList.FindAll(x => x.EstimatedStartTime.Date == dueDate &&x.EstimatedStartTime.TimeOfDay >= timeOfDay && x.PlanID == planID && x.IsDelete == false).ToListAsync();
+                    var todoDelete = await _repoToDoList.FindAll(x => x.EstimatedStartTime.Date == dueDate && x.EstimatedStartTime.TimeOfDay >= timeOfDay && x.PlanID == planID && x.IsDelete == false).ToListAsync();
                     todoDelete.ForEach(item =>
                     {
                         item.IsDelete = true;
@@ -1542,7 +1549,7 @@ namespace DMR_API._Services.Services
                     await _repoToDoList.SaveAll();
 
                     // B4: Vào bảng DispatchList lấy hết danh sách ra theo planID điều kiện là isdelete = false, Cập nhật lại là true
-                    var deletingList = await _repoDispatchList.FindAll(x =>  x.EstimatedStartTime.Date == dueDate && x.EstimatedStartTime.TimeOfDay >= timeOfDay && x.EstimatedFinishTime.TimeOfDay > timeOfDay && x.PlanID == planID && x.IsDelete == false).ToListAsync();
+                    var deletingList = await _repoDispatchList.FindAll(x => x.EstimatedStartTime.Date == dueDate && x.EstimatedStartTime.TimeOfDay >= timeOfDay && x.EstimatedFinishTime.TimeOfDay > timeOfDay && x.PlanID == planID && x.IsDelete == false).ToListAsync();
                     deletingList.ForEach(item =>
                     {
                         item.IsDelete = true;
@@ -1551,7 +1558,7 @@ namespace DMR_API._Services.Services
                     _repoDispatchList.UpdateRange(deletingList);
                     await _repoDispatchList.SaveAll();
 
-                    transaction.Complete();
+                    await transaction.CommitAsync();
                     return new ResponseDetail<object>
                     {
                         Status = true,
@@ -1560,7 +1567,7 @@ namespace DMR_API._Services.Services
                 }
                 catch (Exception ex)
                 {
-                    transaction.Dispose();
+                   await transaction.RollbackAsync();
                     return new ResponseDetail<object>
                     {
                         Status = false,
@@ -2964,7 +2971,7 @@ namespace DMR_API._Services.Services
                         int colIndex = 1;
                         int rowIndex = 1;
                         // với mỗi item trong danh sách sẽ ghi trên 1 dòng
-                        foreach (var body in groupbyItem.OrderBy(x=> x.DueDate))
+                        foreach (var body in groupbyItem.OrderBy(x => x.DueDate))
                         {
                             // bắt đầu ghi từ cột 1. Excel bắt đầu từ 1 không phải từ 0 #c0514d
                             colIndex = 1;
@@ -3207,7 +3214,7 @@ namespace DMR_API._Services.Services
             var tomorrow = DateTime.Now.AddDays(1).Date;
             var lines = await _repoBuilding.FindAll(x => x.ParentID == building).ToListAsync();
             var linesID = lines.Select(x => x.ID);
-            var model = _repoPlan.FindAll(x => linesID.Contains(x.BuildingID) 
+            var model = _repoPlan.FindAll(x => linesID.Contains(x.BuildingID)
              && x.DueDate.Date == tomorrow)
             .Include(x => x.ToDoList)
             .Include(x => x.DispatchList)
@@ -3215,8 +3222,8 @@ namespace DMR_API._Services.Services
             .ToList();
 
             var lineTotal = lines.Count();
-            var planTotal = model.Where(x=> x.ToDoList.Count() > 0 || x.DispatchList.Count() > 0
-                                         && x.UpdatedTime.Value.Date == today 
+            var planTotal = model.Where(x => x.ToDoList.Count() > 0 || x.DispatchList.Count() > 0
+                                         && x.UpdatedTime.Value.Date == today
                                          && x.CreatedDate.Date == today).Count();
             var rateTemp = planTotal != 0 && lineTotal != 0 ? (planTotal / (double)lineTotal) * 100 : 0;
             var rate = Math.Round(rateTemp);
@@ -3229,7 +3236,7 @@ namespace DMR_API._Services.Services
             };
             return new ResponseDetail<object> { Data = data, Status = true };
         }
-        public async Task<ResponseDetail<Byte[]>> AchievementRateExcelExport()
+         public async Task<ResponseDetail<Byte[]>> AchievementRateExcelExport()
         {
             var today = DateTime.Now.Date;
             var tomorrow = DateTime.Now.AddDays(1).Date;
@@ -3254,13 +3261,13 @@ namespace DMR_API._Services.Services
                 var rateTemp = planTotal != 0 && lineTotal != 0 ? (planTotal / (double)lineTotal) * 100 : 0;
                 var rate = Math.Round(rateTemp);
                 data.Add(new AchievementDto
-                { 
+                {
                     Building = item.Name,
                     UpdateOnTime = planTotal, // Update Before 18:00
                     Total = lineTotal,
                     AchievementRate = rate
                 });
-                
+
             }
             var UpdateOnTimeTotal = data.Select(x => x.UpdateOnTime).Sum();
             var planTotal2 = data.Select(x => x.Total).Sum();
@@ -3345,7 +3352,6 @@ namespace DMR_API._Services.Services
                 return new ResponseDetail<Byte[]>(new Byte[] { }, false, string.Empty);
             }
         }
-
         private async Task<List<PlanDto>> GetAllPlanToDay(int buildingTypeID)
         {
             var _buildings = await _repoBuilding.FindAll().Where(x => x.BuildingTypeID == buildingTypeID).ToListAsync();
@@ -3370,7 +3376,7 @@ namespace DMR_API._Services.Services
             return model;
         }
         #endregion
-        
+
         public async Task<ResponseDetail<byte[]>> AchievementRateExcelExport(string date)
         {
             // Muốn lấy báo cáo ngày 21 tháng 5 thì date sẽ là ngày 20 tháng 5
@@ -3488,5 +3494,6 @@ namespace DMR_API._Services.Services
                 return new ResponseDetail<Byte[]>(new Byte[] { }, false, string.Empty);
             }
         }
+
     }
 }

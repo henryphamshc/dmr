@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { AuthenticationService } from 'src/app/_core/_service/authentication.service';
 import { VersionService } from './../../../_core/_service/version.service';
 import { Component, OnDestroy, OnInit } from '@angular/core';
@@ -7,7 +8,8 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 @Component({
   selector: 'app-footer',
   templateUrl: './footer.component.html',
-  styleUrls: ['./footer.component.css']
+  styleUrls: ['./footer.component.css'],
+  providers: [DatePipe]
 })
 export class FooterComponent implements OnInit {
   online: number;

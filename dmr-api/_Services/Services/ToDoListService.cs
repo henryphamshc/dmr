@@ -37,6 +37,7 @@ namespace DMR_API._Services.Services
         private readonly IBuildingRepository _repoBuilding;
         private readonly IBuildingUserRepository _repoBuildingUser;
         private readonly IPlanRepository _repoPlan;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IUserRoleRepository _userRoleRepository;
         private readonly IHttpContextAccessor _accessor;
         private readonly IMailExtension _emailService;
@@ -57,6 +58,7 @@ namespace DMR_API._Services.Services
             IBuildingRepository repoBuilding,
             IBuildingUserRepository repoBuildingUser,
             IPlanRepository repoPlan,
+             IUnitOfWork unitOfWork,
             IUserRoleRepository userRoleRepository,
             IHttpContextAccessor accessor,
             IMailExtension emailService,
@@ -80,6 +82,7 @@ namespace DMR_API._Services.Services
             _repoBuilding = repoBuilding;
             _repoBuildingUser = repoBuildingUser;
             _repoPlan = repoPlan;
+            _unitOfWork = unitOfWork;
             _userRoleRepository = userRoleRepository;
             _accessor = accessor;
             _emailService = emailService;
@@ -1101,7 +1104,7 @@ namespace DMR_API._Services.Services
         #endregion
         public async Task<object> GenerateToDoList(List<int> plans)
         {
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -1284,7 +1287,7 @@ namespace DMR_API._Services.Services
                     }
 
                     await AddDispatchList_v105(plans);
-
+                    
                     var plansModel = await _repoPlan.FindAll(x => plans.Contains(x.ID)).ToListAsync();
                     var userID = _jwtService.GetUserID();
                     plansModel.ForEach(item =>
@@ -1294,17 +1297,16 @@ namespace DMR_API._Services.Services
                     });
                     _repoPlan.UpdateRange(plansModel);
                     await _repoPlan.SaveAll();
-
-                    transaction.Complete();
+                    await transaction.CommitAsync();
                     return new ResponseDetail<object>
                     {
                         Status = true,
                         Message = "Tạo danh sách việc làm thành công!"
                     };
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    transaction.Dispose();
+                   await transaction.RollbackAsync();
                     return new ResponseDetail<object>
                     {
                         Status = false,
@@ -2025,7 +2027,7 @@ namespace DMR_API._Services.Services
         {
             var mixing = _repoMixingInfo.FindById(mixingInfoID);
             if (mixing is null) return new MixingInfo();
-            using (TransactionScope scope = new TransactionScope())
+            using var transaction = _unitOfWork.BeginTransaction();
             {
                 try
                 {
@@ -2045,12 +2047,12 @@ namespace DMR_API._Services.Services
 
 
 
-                    scope.Complete();
+                    transaction.Commit();
                     return mixing;
                 }
                 catch
                 {
-                    scope.Dispose();
+                    transaction.Rollback();
                     return new MixingInfo();
                 }
             }
@@ -2197,7 +2199,7 @@ namespace DMR_API._Services.Services
             }
             // Neu giao roi thi add them lai
             // con chua giao thi khong can add
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -2208,7 +2210,7 @@ namespace DMR_API._Services.Services
                         _repoDispatchList.AddRange(dispatchModel);
                         await _repoDispatchList.SaveAll();
                     }
-                    transaction.Complete();
+                    await transaction.CommitAsync();
                     return new
                     {
                         status = true,
@@ -2217,7 +2219,7 @@ namespace DMR_API._Services.Services
                 }
                 catch (Exception ex)
                 {
-                    transaction.Dispose();
+                   await  transaction.RollbackAsync();
                     return new
                     {
                         status = false,
@@ -2355,7 +2357,7 @@ namespace DMR_API._Services.Services
             // Chi tao gio tang ca
             periods = periods.Where(x => x.IsOvertime == true).ToList();
             var finishWorkingTimeOfWorkplan = periods.OrderByDescending(x => x.EndTime).FirstOrDefault().EndTime;
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -2400,7 +2402,7 @@ namespace DMR_API._Services.Services
                     //cap nhat dispatchlist
                     _repoDispatchList.UpdateRange(dispatchlistForUpdate);
                     await _repoDispatchList.SaveAll();
-                    transaction.Complete();
+                    await transaction.CommitAsync();
                     return new
                     {
                         status = true,
@@ -2409,7 +2411,7 @@ namespace DMR_API._Services.Services
                 }
                 catch (Exception)
                 {
-                    transaction.Dispose();
+                    await transaction.RollbackAsync();
                     return new
                     {
                         status = false,
@@ -2502,7 +2504,7 @@ namespace DMR_API._Services.Services
             // Chi tao gio tang ca
             var finishWorkingTime = periods.Where(x => x.IsOvertime == false).OrderByDescending(x => x.EndTime).FirstOrDefault().EndTime;
             periods = periods.Where(x => x.IsOvertime == true).ToList();
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -2547,7 +2549,7 @@ namespace DMR_API._Services.Services
                     _repoDispatchList.UpdateRange(dispatchlistForUpdate);
                     await _repoDispatchList.SaveAll();
 
-                    transaction.Complete();
+                    await transaction.CommitAsync();
                     return new
                     {
                         status = true,
@@ -2556,7 +2558,7 @@ namespace DMR_API._Services.Services
                 }
                 catch (Exception)
                 {
-                    transaction.Dispose();
+                    await transaction.RollbackAsync();
                     return new
                     {
                         status = false,
@@ -2717,7 +2719,7 @@ namespace DMR_API._Services.Services
             // B2: Nhung nhung multiple glue thi trong 30 phut phai giao 2 lan , nhung single glue thi giao 1 lan
             // TH1: Neu la multiple thi them moi 2 dong du lieu vao bang Dispatch
             // TH2: Them 1 dong du lieu vao bang dispatch
-            using TransactionScope scope = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -2803,13 +2805,13 @@ namespace DMR_API._Services.Services
                             }
                         }
                     }
-                    scope.Complete();
+                    await transaction.RollbackAsync();
                     return mixing;
 
                 }
                 catch
                 {
-                    scope.Dispose();
+                    await transaction.RollbackAsync();
                     return new MixingInfo();
                 }
             }
@@ -2819,7 +2821,7 @@ namespace DMR_API._Services.Services
         {
             var mixing = _repoMixingInfo.FindById(mixingInfoID);
             if (mixing is null) return new MixingInfo();
-            using (TransactionScope scope = new TransactionScope())
+            using var transaction = _unitOfWork.BeginTransaction();
             {
                 try
                 {
@@ -2843,13 +2845,13 @@ namespace DMR_API._Services.Services
                     _repoDispatchListDetail.Save();
 
 
-                    scope.Complete();
+                    transaction.Commit();
                     return mixing;
 
                 }
                 catch
                 {
-                    scope.Dispose();
+                    transaction.Rollback();
                     return new MixingInfo();
                 }
             }
@@ -2858,7 +2860,7 @@ namespace DMR_API._Services.Services
         public async Task<ResponseDetail<string>> UpdateDispatchDetail(DispatchDetailForUpdateDto item)
         {
 
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -2889,12 +2891,12 @@ namespace DMR_API._Services.Services
                     _repoDispatchList.UpdateRange(dispatchlist);
                     await _repoDispatchList.SaveAll();
 
-                    transaction.Complete();
+                    await transaction.CommitAsync();
                     return new ResponseDetail<string>("Success", true, "");
                 }
                 catch (Exception ex)
                 {
-                    transaction.Dispose();
+                    await transaction.RollbackAsync();
                     return new ResponseDetail<string>("Error", true, ex.Message);
                     throw;
                 }
@@ -2913,7 +2915,7 @@ namespace DMR_API._Services.Services
             && x.BuildingID == mixing.BuildingID
             ).ToListAsync();
 
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -2926,12 +2928,12 @@ namespace DMR_API._Services.Services
 
                     _repoDispatchList.UpdateRange(dispatchlist);
                     await _repoDispatchList.SaveAll();
-                    transaction.Complete();
+                    await transaction.CommitAsync();
                     return new ResponseDetail<string>("Success", true, "");
                 }
                 catch (Exception ex)
                 {
-                    transaction.Dispose();
+                    await transaction.RollbackAsync();
                     return new ResponseDetail<string>("Error", true, ex.Message);
                 }
             }

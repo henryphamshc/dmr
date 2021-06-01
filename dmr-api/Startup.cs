@@ -29,7 +29,8 @@ namespace DMR_API
         public void ConfigureServices(IServiceCollection services)
         {
             var appsettings = Configuration.GetSection("Appsettings").Get<Appsettings>();
-
+            //Install repository and unitofwork
+            services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork));
             services.AddDatabaseExtention(Configuration)
                     .AddRepositoriesExtention()
                     .AddServicesExtention();
@@ -97,7 +98,7 @@ namespace DMR_API
                            .AllowAnyHeader()
                            //    .SetIsOriginAllowed(origin => true) // allow any origin
                            .AllowCredentials()); // allow credentials
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseRouting();
             app.UseDefaultFiles();
             app.UseStaticFiles();

@@ -34,6 +34,7 @@ namespace DMR_API._Services.Services
         private readonly IMongoRepository<DMR_API.Data.MongoModels.RawData> _rowDataRepository;
         private readonly ISettingRepository _repoSetting;
         private readonly IToDoListService _toDoListService;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMixingInfoDetailRepository _repoMixingInfoDetail;
         private readonly IMapper _mapper;
         private readonly MapperConfiguration _configMapper;
@@ -48,6 +49,7 @@ namespace DMR_API._Services.Services
             IMongoRepository<DMR_API.Data.MongoModels.RawData> rowDataRepository,
             ISettingRepository repoSetting,
             IToDoListService toDoListService,
+            IUnitOfWork unitOfWork,
              IMixingInfoDetailRepository _repoMixingInfoDetail,
 
         IMapper mapper, IGlueRepository repoGlue,
@@ -67,6 +69,7 @@ namespace DMR_API._Services.Services
             _configMapper = configMapper;
             _repoSetting = repoSetting;
             _toDoListService = toDoListService;
+            _unitOfWork = unitOfWork;
             this._repoMixingInfoDetail = _repoMixingInfoDetail;
         }
         private static Random random = new Random();
@@ -79,7 +82,7 @@ namespace DMR_API._Services.Services
         public MixingInfo Mixing(MixingInfoForCreateDto mixing)
         {
 
-            using (TransactionScope scope = new TransactionScope())
+            using var transaction = _unitOfWork.BeginTransaction();
             {
                 try
                 {
@@ -117,12 +120,12 @@ namespace DMR_API._Services.Services
                         Amount = mixing.ChemicalA.ToDouble() + mixing.ChemicalB.ToDouble() + mixing.ChemicalC.ToDouble() + mixing.ChemicalD.ToDouble() + mixing.ChemicalE.ToDouble()
                     };
                     _toDoListService.UpdateMixingTimeRange(todo);
-                    scope.Complete();
+                    transaction.Commit();
                     return item;
                 }
                 catch
                 {
-                    scope.Dispose();
+                    transaction.Rollback();
                     return new MixingInfo();
                 }
             }
@@ -321,8 +324,8 @@ namespace DMR_API._Services.Services
         // Đã chỉnh sửa ngày 1/29/2021 4:29PM
         public MixingInfo AddMixingInfo(MixingInfoForAddDto mixing)
         {
-          
-            using (TransactionScope scope = new TransactionScope())
+
+            using var transaction = _unitOfWork.BeginTransaction();
             {
                 try
                 {
@@ -385,19 +388,19 @@ namespace DMR_API._Services.Services
                         Amount = details.Sum(x => x.Amount)
                     };
                     _toDoListService.UpdateMixingTimeRange(todo);
-                    scope.Complete();
+                    transaction.Commit();
                     return mixingInfo;
                 }
                 catch
                 {
-                    scope.Dispose();
+                    transaction.Rollback();
                     return null;
                 }
             }
         }
        public async Task<MixingInfo> AddMixingInfoAsync(MixingInfoForAddDto mixing)
         {
-             using (var scope = new TransactionScopeAsync().Create())
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -461,12 +464,12 @@ namespace DMR_API._Services.Services
                         Amount = details.Sum(x => x.Amount)
                     };
                     _toDoListService.UpdateMixingTimeRange(todo);
-                    scope.Complete();
+                   await transaction.CommitAsync();
                     return mixingInfo;
                 }
                 catch
                 {
-                    scope.Dispose();
+                    await transaction.RollbackAsync();
                     return null;
                 }
             }

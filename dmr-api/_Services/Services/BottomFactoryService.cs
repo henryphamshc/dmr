@@ -5,6 +5,7 @@ using dmr_api.Models;
 using DMR_API._Repositories.Interface;
 using DMR_API._Services.Interface;
 using DMR_API.Constants;
+using DMR_API.Data;
 using DMR_API.DTO;
 using DMR_API.Enums;
 using DMR_API.Helpers;
@@ -32,6 +33,7 @@ namespace DMR_API._Services.Services
         private readonly IDispatchRepository _repoDispatch;
         private readonly IPlanRepository _repoPlan;
         private readonly IGlueRepository _repoGlue;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ISubpackageCapacityRepository _repoSubpackageCapacity;
         private readonly IMixingInfoRepository _mixingInfoRepository;
         private readonly IMixingInfoDetailRepository _mixingInfoDetailRepository;
@@ -52,6 +54,7 @@ namespace DMR_API._Services.Services
             IDispatchRepository repoDispatch,
             IPlanRepository repoPlan,
             IGlueRepository repoGlue,
+            IUnitOfWork unitOfWork,
             ISubpackageCapacityRepository repoSubpackageCapacity,
             IMixingInfoRepository mixingInfoRepository,
             IMixingInfoDetailRepository mixingInfoDetailRepository,
@@ -72,6 +75,7 @@ namespace DMR_API._Services.Services
             _repoDispatch = repoDispatch;
             _repoPlan = repoPlan;
             _repoGlue = repoGlue;
+            _unitOfWork = unitOfWork;
             _repoSubpackageCapacity = repoSubpackageCapacity;
             _mixingInfoRepository = mixingInfoRepository;
             _mixingInfoDetailRepository = mixingInfoDetailRepository;
@@ -1202,7 +1206,7 @@ namespace DMR_API._Services.Services
 
         public async Task<object> GenerateToDoList(List<int> plans)
         {
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -1461,7 +1465,7 @@ namespace DMR_API._Services.Services
                     });
                     _repoPlan.UpdateRange(plansModel);
                     await _repoPlan.SaveAll();
-                    transaction.Complete();
+                    await transaction.CommitAsync();
                     return new ResponseDetail<object>
                     {
                         Status = true,
@@ -1470,7 +1474,7 @@ namespace DMR_API._Services.Services
                 }
                 catch (Exception)
                 {
-                    transaction.Dispose();
+                    await transaction.RollbackAsync();
                     return new ResponseDetail<object>
                     {
                         Status = false,
@@ -2053,19 +2057,19 @@ namespace DMR_API._Services.Services
         }
         public async Task<bool> SaveSubpackage(SubpackageParam obj)
         {
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
                     var mixingInfo = await CreateMixingInfo(obj);
                     await CreateSubpackage(obj, mixingInfo);
-                    transaction.Complete();
+                    await transaction.CommitAsync();
                     return true;
                 }
                 catch (System.Exception ex)
                 {
                     // TODO
-                    transaction.Dispose();
+                    await transaction.RollbackAsync();
                     var message = ex.Message;
                     return false;
                     throw;

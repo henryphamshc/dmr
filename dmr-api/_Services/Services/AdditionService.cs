@@ -44,7 +44,16 @@ namespace DMR_API._Services.Services
             var addition = _mapper.Map<Addition>(model);
             addition.CreatedTime = DateTime.Now;
             _repoAddition.Add(addition);
-            return await _repoAddition.SaveAll();
+            try
+            {
+                return await _repoAddition.SaveAll();
+
+            }
+            catch (Exception)
+            {
+                return false;
+                throw;
+            }
         }
 
         public async Task<List<BPFCStatusDto>> GetBPFCSchedulesByApprovalStatus ()
@@ -86,7 +95,16 @@ namespace DMR_API._Services.Services
             addition.IsDelete = true;
             addition.DeletedTime = DateTime.Now;
             _repoAddition.Update(addition);
-            return await _repoAddition.SaveAll();
+            try
+            {
+                return await _repoAddition.SaveAll();
+
+            }
+            catch (Exception)
+            {
+                return false;
+                throw;
+            }
         }
 
         //Cập nhật Addition
@@ -96,7 +114,16 @@ namespace DMR_API._Services.Services
             addition.ModifiedBy = addition.CreatedBy;
             addition.ModifiedTime = DateTime.Now;
             _repoAddition.Update(addition);
-            return await _repoAddition.SaveAll();
+            try
+            {
+                return await _repoAddition.SaveAll();
+
+            }
+            catch (Exception)
+            {
+                return false;
+                throw;
+            }
         }
 
         //Lấy toàn bộ danh sách Addition 
@@ -197,7 +224,16 @@ namespace DMR_API._Services.Services
                 item.CreatedTime = DateTime.Now;
             });
             _repoAddition.AddRange(addition);
-            return await _repoAddition.SaveAll();
+            try
+            {
+                return await _repoAddition.SaveAll();
+
+            }
+            catch (Exception)
+            {
+                return false;
+                throw;
+            }
         }
 
         public async Task<bool> UpdateRange(AdditionDto model)
@@ -226,7 +262,16 @@ namespace DMR_API._Services.Services
             }
             _repoAddition.RemoveMultiple(old);
             _repoAddition.AddRange(result);
-            return await _repoAddition.SaveAll();
+            try
+            {
+                return await _repoAddition.SaveAll();
+
+            }
+            catch (Exception)
+            {
+                return false;
+                throw;
+            }
         }
 
         public async Task<bool> DeleteRange(List<int> model, int deleteBy)
@@ -240,7 +285,16 @@ namespace DMR_API._Services.Services
                 item.DeletedTime = DateTime.Now;
             });
             _repoAddition.UpdateRange(delete);
-            return await _repoAddition.SaveAll();
+            try
+            {
+                return await _repoAddition.SaveAll();
+
+            }
+            catch (Exception)
+            {
+                return false;
+                throw;
+            }
         }
 
     }

@@ -25,16 +25,19 @@ namespace DMR_API._Services.Services
         private readonly IMapper _mapper;
         private readonly MapperConfiguration _configMapper;
         private readonly IHubContext<ECHub> _hubContext;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly HttpClient client;
 
         public MailingService(IMailingRepository repoMailing,
             IMapper mapper,
             MapperConfiguration configMapper,
             IHubContext<ECHub> hubContext,
+            IUnitOfWork unitOfWork,
             IHttpClientFactory clientFactory)
         {
             _configMapper = configMapper;
             _hubContext = hubContext;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _repoMailing = repoMailing;
             client = clientFactory.CreateClient("default");
@@ -69,7 +72,7 @@ namespace DMR_API._Services.Services
 
         public async Task<bool> UpdateRange(List<MailingDto> model)
         {
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -110,12 +113,12 @@ namespace DMR_API._Services.Services
                        
                     }
 
-                    transaction.Complete();
+                   await  transaction.CommitAsync();
                     return true;
                 }
                 catch
                 {
-                    transaction.Dispose();
+                    await transaction.RollbackAsync();
                     return false;
                 }
             }

@@ -126,5 +126,10 @@ namespace DMR_API.Data
         {
             return  _context.Database.BeginTransaction();
         }
+
+        public Task<IDbContextTransaction> BeginTransactionAsync()
+        {
+            return _context.Database.BeginTransactionAsync();
+        }
     }
 }

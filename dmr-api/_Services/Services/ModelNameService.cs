@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using DMR_API.Helpers.Enum;
 using System.Transactions;
 using CodeUtility;
+using DMR_API.Data;
 
 namespace DMR_API._Services.Services
 {
@@ -29,6 +30,7 @@ namespace DMR_API._Services.Services
         private readonly ISupplierRepository _supplierRepository;
         private readonly IBPFCEstablishRepository _repoBPFC;
         private readonly IPlanRepository _repoPlan;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IModelNoRepository _repoModelNO;
         private readonly IMailExtension _mailExtension;
         private readonly IConfiguration _configuration;
@@ -48,6 +50,7 @@ namespace DMR_API._Services.Services
             ISupplierRepository supplierRepository,
             IConfiguration configuration,
             IPlanRepository repoPlan,
+            IUnitOfWork unitOfWork,
             IMapper mapper,
             MapperConfiguration configMapper)
         {
@@ -66,6 +69,7 @@ namespace DMR_API._Services.Services
             _configuration = configuration;
             _mailExtension = mailExtension;
             _repoPlan = repoPlan;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<ArticleNo> FindArticleNoByCloneDto(CloneDto clone)
@@ -223,94 +227,96 @@ namespace DMR_API._Services.Services
             await _mailExtension.SendEmailRangeAsync(emails, subject, message);
         }
 
-      
-       
+
+
 
         public async Task<bool> CloneModelName(int modelNameID, int modelNOID, int articleNOID, int processID)
         {
-            try
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
-                using (var scope = new TransactionScope(TransactionScopeOption.Required,
-                  new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
+                try
                 {
-                    var bpfc = await _repoBPFC.FindAll()
-                                        .Include(x => x.ModelName)
-                                        .Include(x => x.ModelNo)
-                                        .Include(x => x.ArtProcess)
-                                        .Include(x => x.ArticleNo)
-                                        .Include(x => x.Glues.Where(x => x.isShow == true))
-                                        .Include(x => x.Plans)
-                                        .FirstOrDefaultAsync(x => x.ModelNameID == modelNameID
-                                    && x.ModelNoID == modelNOID
-                                    && x.ArticleNoID == articleNOID
-                                    && x.ArtProcessID == processID);
-                    if (bpfc == null) return false;
-                    var modelNameData = bpfc.ModelName;
-                    modelNameData.ID = 0;
-                    _repoModelName.Add(modelNameData);
-                    await _repoModelName.SaveAll();
+                    
+                        var bpfc = await _repoBPFC.FindAll()
+                                            .Include(x => x.ModelName)
+                                            .Include(x => x.ModelNo)
+                                            .Include(x => x.ArtProcess)
+                                            .Include(x => x.ArticleNo)
+                                            .Include(x => x.Glues.Where(x => x.isShow == true))
+                                            .Include(x => x.Plans)
+                                            .FirstOrDefaultAsync(x => x.ModelNameID == modelNameID
+                                        && x.ModelNoID == modelNOID
+                                        && x.ArticleNoID == articleNOID
+                                        && x.ArtProcessID == processID);
+                        if (bpfc == null) return false;
+                        var modelNameData = bpfc.ModelName;
+                        modelNameData.ID = 0;
+                        _repoModelName.Add(modelNameData);
+                        await _repoModelName.SaveAll();
 
-                    var modelNoData = bpfc.ModelNo;
-                    modelNoData.ID = 0;
-                    modelNoData.ModelNameID = modelNameData.ID;
-                    _repoModelNO.Add(modelNoData);
-                    await _repoModelNO.SaveAll();
+                        var modelNoData = bpfc.ModelNo;
+                        modelNoData.ID = 0;
+                        modelNoData.ModelNameID = modelNameData.ID;
+                        _repoModelNO.Add(modelNoData);
+                        await _repoModelNO.SaveAll();
 
-                    var articleNOData = bpfc.ArticleNo;
-                    articleNOData.ID = 0;
-                    articleNOData.ModelNoID = modelNoData.ID;
-                    _repoArticleNo.Add(articleNOData);
-                    await _repoArticleNo.SaveAll();
+                        var articleNOData = bpfc.ArticleNo;
+                        articleNOData.ID = 0;
+                        articleNOData.ModelNoID = modelNoData.ID;
+                        _repoArticleNo.Add(articleNOData);
+                        await _repoArticleNo.SaveAll();
 
-                    var artProcessData = bpfc.ArtProcess;
-                    artProcessData.ID = 0;
-                    artProcessData.ArticleNoID = articleNOData.ID;
-                    _repoArtProcess.Add(artProcessData);
-                    await _repoArtProcess.SaveAll();
+                        var artProcessData = bpfc.ArtProcess;
+                        artProcessData.ID = 0;
+                        artProcessData.ArticleNoID = articleNOData.ID;
+                        _repoArtProcess.Add(artProcessData);
+                        await _repoArtProcess.SaveAll();
 
-                    var bpfcData = bpfc;
-                    bpfcData.ModelName = null;
-                    bpfcData.ModelNo = null;
-                    bpfcData.ArticleNo = null;
-                    bpfcData.ArtProcess = null;
-                    bpfcData.Glues = null;
-                    bpfcData.Plans = null;
-                    bpfcData.ID = 0;
-                    bpfcData.ModelNameID = modelNameData.ID;
-                    bpfcData.ModelNoID = modelNoData.ID;
-                    bpfcData.ArticleNoID = articleNOData.ID;
-                    bpfcData.ArtProcessID = artProcessData.ID;
-                    _repoBPFC.Add(bpfcData);
-                    await _repoBPFC.SaveAll();
+                        var bpfcData = bpfc;
+                        bpfcData.ModelName = null;
+                        bpfcData.ModelNo = null;
+                        bpfcData.ArticleNo = null;
+                        bpfcData.ArtProcess = null;
+                        bpfcData.Glues = null;
+                        bpfcData.Plans = null;
+                        bpfcData.ID = 0;
+                        bpfcData.ModelNameID = modelNameData.ID;
+                        bpfcData.ModelNoID = modelNoData.ID;
+                        bpfcData.ArticleNoID = articleNOData.ID;
+                        bpfcData.ArtProcessID = artProcessData.ID;
+                        _repoBPFC.Add(bpfcData);
+                        await _repoBPFC.SaveAll();
 
-                    var gluesData = bpfc.Glues.ToList();
-                    gluesData.ForEach(item =>
-                    {
-                        item.ID = 0;
-                        item.BPFCEstablishID = bpfcData.ID;
-                    });
+                        var gluesData = bpfc.Glues.ToList();
+                        gluesData.ForEach(item =>
+                        {
+                            item.ID = 0;
+                            item.BPFCEstablishID = bpfcData.ID;
+                        });
 
-                    _repoGlue.AddRange(gluesData);
-                    await _repoGlue.SaveAll();
+                        _repoGlue.AddRange(gluesData);
+                        await _repoGlue.SaveAll();
 
-                    var planData = bpfc.Plans.ToList();
-                    planData.ForEach(item =>
-                    {
-                        item.ID = 0;
-                        item.BPFCEstablishID = bpfcData.ID;
-                    });
+                        var planData = bpfc.Plans.ToList();
+                        planData.ForEach(item =>
+                        {
+                            item.ID = 0;
+                            item.BPFCEstablishID = bpfcData.ID;
+                        });
 
-                    _repoPlan.AddRange(planData);
-                    await _repoPlan.SaveAll();
-                    scope.Complete();
+                        _repoPlan.AddRange(planData);
+                        await _repoPlan.SaveAll();
+                        await transaction.CommitAsync();
+                    
+                    return true;
                 }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Loi clone model name", ex);
-                return false;
-            }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    Console.WriteLine("Loi clone model name", ex);
+                    return false;
+                }
+            } 
         }
         private async Task<string> GenatateGlueCode(string code)
         {
@@ -514,11 +520,12 @@ namespace DMR_API._Services.Services
         /// <returns></returns>
         public async Task<object> CloneModelName(CloneDto model)
         {
-            try
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
-                using (var scope = new TransactionScope(TransactionScopeOption.Required,
-                  new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
+
+                try
                 {
+
                     //B1: Tìm bpfc nguồn
                     var bpfcSource = await _repoBPFC.FindAll()
                     .Include(x => x.ModelName)
@@ -548,23 +555,25 @@ namespace DMR_API._Services.Services
                     }
                     // Nhân bản
                     await ExportGlueFromBPFCSourceToBPFCDestination(model.CloneBy, bpfcDestination, bpfcSource);
-                   
-                    scope.Complete();
+
+                   await  transaction.CommitAsync();
+
+                    return new
+                    {
+                        message = "Đã nhân bản thành công! <br>The BPFC has been cloned!",
+                        status = true
+                    };
                 }
-                return new
+                catch (Exception ex)
                 {
-                    message = "Đã nhân bản thành công! <br>The BPFC has been cloned!",
-                    status = true
-                };
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Clone BPFC: ", ex);
-                return new
-                {
-                    message = "Nhân bản không thành công! <br> Clone failed!",
-                    status = false
-                };
+                    await transaction.RollbackAsync();
+                    Console.WriteLine("Clone BPFC: ", ex);
+                    return new
+                    {
+                        message = "Nhân bản không thành công! <br> Clone failed!",
+                        status = false
+                    };
+                }
             }
         }
 
@@ -626,11 +635,10 @@ namespace DMR_API._Services.Services
         /// <returns></returns>
         public async Task<object> CloneModelNameForBPFCShcedule(CloneDto clone)
         {
+                using var transaction = await _unitOfWork.BeginTransactionAsync();
+                {
             try
             {
-                using (var scope = new TransactionScope(TransactionScopeOption.Required,
-                  new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
-                {
 
                     var bpfc = await _repoBPFC.FindAll()
                     .Include(x => x.ModelName)
@@ -702,8 +710,7 @@ namespace DMR_API._Services.Services
                             await CloneGlueByCloneDto(clone, bpfcForClone, bpfc);
                         }
                     }
-                    scope.Complete();
-                }
+                   await transaction.CommitAsync();
                 return new
                 {
                     message = "The BPFC has been cloned!",
@@ -712,12 +719,14 @@ namespace DMR_API._Services.Services
             }
             catch (Exception ex)
             {
+                   await transaction.RollbackAsync();
                 Console.WriteLine("Loi clone model name", ex);
                 return new
                 {
                     message = "",
                     status = false
                 };
+                }
             }
         }
         public async Task CloneGlueByCloneDto(CloneDto clone, BPFCEstablish bpfcDestination, BPFCEstablish bpfcSourceClone)

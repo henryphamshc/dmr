@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore.Storage;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,20 +9,34 @@ namespace DMR_API.Data
 {
     public interface IUnitOfWork
     {
-        Task<int> CommitAsync();
+        Task<int> SaveChangesAsync();
+        IDbContextTransaction BeginTransaction();
+        Task<IDbContextTransaction> BeginTransactionAsync();
     }
-    public class UnitOfWork : IUnitOfWork
+    public class UnitOfWork : IUnitOfWork, IDisposable
     {
-        private DbFactory _dbFactory;
+        private DataContext _context;
 
-        public UnitOfWork(DbFactory dbFactory)
+        public UnitOfWork(DataContext dbFactory)
         {
-            _dbFactory = dbFactory;
+            _context = dbFactory;
+        }
+        public void Dispose()
+        {
+            _context?.Dispose();
         }
 
-        public Task<int> CommitAsync()
+        public Task<int> SaveChangesAsync()
         {
-            return _dbFactory.DbContext.SaveChangesAsync();
+            return _context.SaveChangesAsync();
+        }
+        public IDbContextTransaction BeginTransaction()
+        {
+            return _context.Database.BeginTransaction();
+        }
+        public Task<IDbContextTransaction> BeginTransactionAsync()
+        {
+            return  _context.Database.BeginTransactionAsync();
         }
     }
 

@@ -24,6 +24,7 @@ namespace DMR_API._Services.Services
         private readonly IToDoListRepository _repoTodolist;
         private readonly IMixingInfoRepository _repoMixingInfo;
         private readonly IStirRepository _repoStir;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IStirRawDataRepository _repoStirStirRawData;
         private readonly IMongoRepository<Data.MongoModels.RawData> _repoRawData;
         private readonly MapperConfiguration _configMapper;
@@ -35,6 +36,7 @@ namespace DMR_API._Services.Services
             IToDoListRepository repoTodolist,
             IMixingInfoRepository repoMixingInfo,
             IStirRepository repoStir,
+            IUnitOfWork unitOfWork,
             IStirRawDataRepository repoStirStirRawData,
             IMongoRepository<DMR_API.Data.MongoModels.RawData> repoRawData,
             MapperConfiguration configMapper)
@@ -46,6 +48,7 @@ namespace DMR_API._Services.Services
             _repoTodolist = repoTodolist;
             _repoMixingInfo = repoMixingInfo;
             _repoStir = repoStir;
+            _unitOfWork = unitOfWork;
             _repoStirStirRawData = repoStirStirRawData;
             _repoRawData = repoRawData;
             _configMapper = configMapper;
@@ -131,7 +134,7 @@ namespace DMR_API._Services.Services
         }
         public async Task<bool> Update(StirDTO model)
         {
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -229,12 +232,12 @@ namespace DMR_API._Services.Services
                         }
                     }
 
-                    transaction.Complete();
+                   await  transaction.CommitAsync();
                     return true;
                 }
                 catch (Exception)
                 {
-                    transaction.Dispose();
+                   await transaction.RollbackAsync();
                     return false;
                 }
             }
@@ -252,7 +255,7 @@ namespace DMR_API._Services.Services
 
         public async Task<Stir> UpdateStir(StirDTO model)
         {
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -357,12 +360,12 @@ namespace DMR_API._Services.Services
                         }
                     }
 
-                    transaction.Complete();
+                   await transaction.CommitAsync();
                     return item;
                 }
                 catch (Exception)
                 {
-                    transaction.Dispose();
+                   await transaction.RollbackAsync();
                     return null;
                 }
             }

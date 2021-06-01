@@ -9,7 +9,7 @@ using DMR_API._Repositories.Interface;
 using DMR_API._Services.Interface;
 using DMR_API.DTO;
 using DMR_API.Models;
-using Microsoft.EntityFrameworkCore;// nãy tự nhiên bị tắt máy à uk có mấy file bị doi ti
+using Microsoft.EntityFrameworkCore;
 
 namespace DMR_API._Services.Services
 {

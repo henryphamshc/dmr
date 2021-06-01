@@ -47,7 +47,7 @@ const routes: Routes = [
           title: 'Action In Function',
           functionCode: 'Action In Function'
         },
-        canActivate: [AuthGuard]
+        // canActivate: [AuthGuard]
       },
       {
         path: 'version',

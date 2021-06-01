@@ -15,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using DMR_API.Helpers.Enum;
 using Microsoft.AspNetCore.Http;
 using CodeUtility;
+using DMR_API.Data;
 
 namespace DMR_API._Services.Services
 {
@@ -33,6 +34,7 @@ namespace DMR_API._Services.Services
         private readonly IArtProcessRepository _repoArtProcess;
         private readonly IGlueIngredientRepository _repoGlueIngredient;
         private readonly IGlueRepository _repoGlue;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ICommentRepository _repoComment;
         public BPFCEstablishService(
             IBPFCEstablishRepository repoBPFCEstablish,
@@ -44,6 +46,7 @@ namespace DMR_API._Services.Services
             IHttpContextAccessor accessor,
             IArticleNoRepository repoArticleNo,
             IGlueRepository repoGlue,
+            IUnitOfWork unitOfWork,
             IGlueIngredientRepository repoGlueIngredient,
             IArtProcessRepository repoArtProcess,
             IMapper mapper,
@@ -65,6 +68,7 @@ namespace DMR_API._Services.Services
             _repoArtProcess = repoArtProcess;
             _repoGlueIngredient = repoGlueIngredient;
             _repoGlue = repoGlue;
+            _unitOfWork = unitOfWork;
         }
 
         //Thêm BPFC mới vào bảng BPFCEstablish
@@ -350,76 +354,85 @@ namespace DMR_API._Services.Services
         {
             var result = new BPFCEstablishDto();
             // make model name, model no, article no, process
-            using (var scope = new TransactionScope(TransactionScopeOption.Required,
-             new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
-                // make model name
-                var modelName = await _repoModelName.FindAll().FirstOrDefaultAsync(x => x.Name.ToUpper().Equals(bPFCEstablishDto.ModelName.ToUpper()));
-                if (modelName != null)
+                try
                 {
-                    result.ModelNameID = modelName.ID;
-                }
-                else
-                {
-                    var modelNameModel = new ModelName { Name = bPFCEstablishDto.ModelName };
-                    _repoModelName.Add(modelNameModel);
-                    await _repoModelNo.SaveAll();
-                    result.ModelNameID = modelNameModel.ID;
-                }
-                // end make model no
 
-                // Make model no
-                var modelNo = await _repoModelNo.FindAll().FirstOrDefaultAsync(x => x.Name.ToUpper().Equals(bPFCEstablishDto.ModelNo.ToUpper()) && x.ModelNameID == result.ModelNameID);
-                if (modelNo != null)
-                {
-                    result.ModelNoID = modelNo.ID;
-                }
-                else
-                {
-                    var modelNoModel = new ModelNo { Name = bPFCEstablishDto.ModelNo, ModelNameID = result.ModelNameID };
-                    _repoModelNo.Add(modelNoModel);
-                    await _repoModelNo.SaveAll();
-                    result.ModelNoID = modelNoModel.ID;
-                }
-                // end make model NO
 
-                // end make articleNO
+                    // make model name
+                    var modelName = await _repoModelName.FindAll().FirstOrDefaultAsync(x => x.Name.ToUpper().Equals(bPFCEstablishDto.ModelName.ToUpper()));
+                    if (modelName != null)
+                    {
+                        result.ModelNameID = modelName.ID;
+                    }
+                    else
+                    {
+                        var modelNameModel = new ModelName { Name = bPFCEstablishDto.ModelName };
+                        _repoModelName.Add(modelNameModel);
+                        await _repoModelNo.SaveAll();
+                        result.ModelNameID = modelNameModel.ID;
+                    }
+                    // end make model no
 
-                var artNo = await _repoArticleNo.FindAll().FirstOrDefaultAsync(x => x.Name.ToUpper().Equals(bPFCEstablishDto.ArticleNo.ToUpper()) && x.ModelNoID == result.ModelNoID);
-                if (artNo != null)
-                {
-                    result.ArticleNoID = artNo.ID;
-                }
-                else
-                {
-                    // make art no
-                    var articleNoModel = new ArticleNo { Name = bPFCEstablishDto.ArticleNo, ModelNoID = result.ModelNoID };
-                    _repoArticleNo.Add(articleNoModel);
-                    await _repoArticleNo.SaveAll();
-                    result.ArticleNoID = articleNoModel.ID;
-                }
-                // end articleNO
-                //  make Art Process
+                    // Make model no
+                    var modelNo = await _repoModelNo.FindAll().FirstOrDefaultAsync(x => x.Name.ToUpper().Equals(bPFCEstablishDto.ModelNo.ToUpper()) && x.ModelNameID == result.ModelNameID);
+                    if (modelNo != null)
+                    {
+                        result.ModelNoID = modelNo.ID;
+                    }
+                    else
+                    {
+                        var modelNoModel = new ModelNo { Name = bPFCEstablishDto.ModelNo, ModelNameID = result.ModelNameID };
+                        _repoModelNo.Add(modelNoModel);
+                        await _repoModelNo.SaveAll();
+                        result.ModelNoID = modelNoModel.ID;
+                    }
+                    // end make model NO
 
-                var artProcess = await _repoArtProcess.FindAll().FirstOrDefaultAsync(x => x.ProcessID.Equals(bPFCEstablishDto.Process.ToUpper() == "STF" ? 2 : 1) && x.ArticleNoID == result.ArticleNoID);
-                if (artProcess != null)
-                {
-                    result.ArtProcessID = artProcess.ID;
-                }
-                else
-                {
-                    // make art process
-                    var artProcessModel = new ArtProcess { ArticleNoID = result.ArticleNoID, ProcessID = bPFCEstablishDto.Process.ToUpper() == "STF" ? 2 : 1 };
-                    _repoArtProcess.Add(artProcessModel);
-                    await _repoArtProcess.SaveAll();
-                    result.ArtProcessID = artProcessModel.ID;
-                }
-                //End  make Art Process
+                    // end make articleNO
 
-                result.CreatedBy = bPFCEstablishDto.CreatedBy;
-                result.DueDate = bPFCEstablishDto.DueDate;
-                scope.Complete();
-                return result;
+                    var artNo = await _repoArticleNo.FindAll().FirstOrDefaultAsync(x => x.Name.ToUpper().Equals(bPFCEstablishDto.ArticleNo.ToUpper()) && x.ModelNoID == result.ModelNoID);
+                    if (artNo != null)
+                    {
+                        result.ArticleNoID = artNo.ID;
+                    }
+                    else
+                    {
+                        // make art no
+                        var articleNoModel = new ArticleNo { Name = bPFCEstablishDto.ArticleNo, ModelNoID = result.ModelNoID };
+                        _repoArticleNo.Add(articleNoModel);
+                        await _repoArticleNo.SaveAll();
+                        result.ArticleNoID = articleNoModel.ID;
+                    }
+                    // end articleNO
+                    //  make Art Process
+
+                    var artProcess = await _repoArtProcess.FindAll().FirstOrDefaultAsync(x => x.ProcessID.Equals(bPFCEstablishDto.Process.ToUpper() == "STF" ? 2 : 1) && x.ArticleNoID == result.ArticleNoID);
+                    if (artProcess != null)
+                    {
+                        result.ArtProcessID = artProcess.ID;
+                    }
+                    else
+                    {
+                        // make art process
+                        var artProcessModel = new ArtProcess { ArticleNoID = result.ArticleNoID, ProcessID = bPFCEstablishDto.Process.ToUpper() == "STF" ? 2 : 1 };
+                        _repoArtProcess.Add(artProcessModel);
+                        await _repoArtProcess.SaveAll();
+                        result.ArtProcessID = artProcessModel.ID;
+                    }
+                    //End  make Art Process
+
+                    result.CreatedBy = bPFCEstablishDto.CreatedBy;
+                    result.DueDate = bPFCEstablishDto.DueDate;
+                    await transaction.CommitAsync();
+                    return result;
+                }
+                catch
+                {
+                   await transaction.RollbackAsync();
+                    return result;
+                }
             }
         }
         private async Task<BPFCEstablish> CheckExistBPFC(BPFCEstablishDto bPFC)

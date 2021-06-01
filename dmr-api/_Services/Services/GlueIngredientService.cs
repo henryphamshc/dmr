@@ -12,12 +12,14 @@ using DMR_API.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Transactions;
 using CodeUtility;
+using DMR_API.Data;
 
 namespace DMR_API._Services.Services
 {
     public class GlueIngredientService : IGlueIngredientService
     {
         private readonly IGlueRepository _repoGlue;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ISupplierRepository _repoSup;
         private readonly IIngredientRepository _repoIngredient;
         private readonly IGlueIngredientRepository _repoGlueIngredient;
@@ -29,6 +31,7 @@ namespace DMR_API._Services.Services
             IGlueIngredientRepository repoGlueIngredient,
             IGlueNameRepository repoGlueName,
             IGlueRepository repoGlue,
+            IUnitOfWork unitOfWork,
             IMapper mapper,
             MapperConfiguration configMapper)
         {
@@ -36,6 +39,7 @@ namespace DMR_API._Services.Services
             _mapper = mapper;
             _repoIngredient = repoIngredient;
             _repoGlue = repoGlue;
+            _unitOfWork = unitOfWork;
             _repoSup = repoSup;
             _repoGlueIngredient = repoGlueIngredient;
             _repoGlueName = repoGlueName;
@@ -275,7 +279,7 @@ namespace DMR_API._Services.Services
             var glueName = model.GlueName;
             var glueIngredients = _mapper.Map<List<GlueIngredientForMapDto>, List<GlueIngredient>>(model.GlueIngredientForMapDto);
 
-            using (TransactionScope scope = new TransactionScope())
+            using var transaction = _unitOfWork.BeginTransaction();
             {
                 try
                 {
@@ -312,7 +316,7 @@ namespace DMR_API._Services.Services
                     {
                         if (glueIngredient.Position.IsNullOrEmpty())
                         {
-                            scope.Dispose();
+                            transaction.Rollback();
                             return new ResponseDetail<object>
                             {
                                 Status = false,
@@ -336,7 +340,7 @@ namespace DMR_API._Services.Services
                         }
 
                     }
-                    scope.Complete();
+                    transaction.Commit();
                     return new ResponseDetail<object>
                     {
                         Status = true,
@@ -345,7 +349,7 @@ namespace DMR_API._Services.Services
                 }
                 catch(Exception ex)
                 {
-                    scope.Dispose();
+                    transaction.Rollback();
                     return new ResponseDetail<object>
                     {
                         Status = false,

@@ -96,7 +96,7 @@ export class PlanComponent extends BaseComponent implements OnInit, OnDestroy {
   buildingNameForChangeModal = '';
   public textLine = 'Select a line name';
   public fieldsGlue: object = { text: 'name', value: 'name' };
-  public fieldsLine: object = { text: 'name', value: 'name' };
+  public fieldsLine: object = { text: 'name', value: 'id' };
   public fieldsBPFC: object = {
     text: 'name', value: 'id', tooltip: 'name', itemCreated: (e: any) => {
       highlightSearch(e.item, this.queryString, true, 'Contains');
@@ -449,11 +449,15 @@ export class PlanComponent extends BaseComponent implements OnInit, OnDestroy {
     // this.modalPlan.endTime = { hour: value.getHours(), minute: value.getMinutes() };
   }
   actionBegin(args) {
+    if (args.requestType === 'add' && args.type === "actionBegin") {
+      args.data.hourlyOutput = 120;
+    }
     if (args.requestType === 'beginEdit') {
       const data = args.rowData;
       if (args.rowData.isOffline === true) {
         args.cancel = true;
       }
+     
       this.clearForm();
       this.modalPlan.finishWorkingTime = data.finishWorkingTime;
       this.modalPlan.startWorkingTime = data.startWorkingTime;
@@ -485,7 +489,7 @@ export class PlanComponent extends BaseComponent implements OnInit, OnDestroy {
           }
         }
         this.modalPlan.id = args.data.id || 0;
-        this.modalPlan.buildingID = this.lineID ?? args.data.buildingID;
+        this.modalPlan.buildingID = args.data.buildingID;
         this.modalPlan.dueDate = this.dueDate;
         this.modalPlan.workingHour = args.data.workingHour;
         this.modalPlan.BPFCEstablishID = args.data.bpfcEstablishID;
@@ -514,13 +518,13 @@ export class PlanComponent extends BaseComponent implements OnInit, OnDestroy {
         // console.log('Đã chỉnh sửa thành công kế hoạch làm việc!');
       }
       if (args.action === 'add') {
-        args.data.hourlyOutput = 120;
+        const hourlyOutput = args.data.hourlyOutput || 120;
         this.modalPlan.buildingID = this.lineID;
         this.modalPlan.dueDate = this.dueDate;
         this.modalPlan.workingHour = args.data.workingHour || 0;
         this.modalPlan.BPFCEstablishID = this.bpfcID;
         this.modalPlan.BPFCName = args.data.bpfcName;
-        this.modalPlan.hourlyOutput = args.data.hourlyOutput || 0;
+        this.modalPlan.hourlyOutput = hourlyOutput;
         this.modalPlan.startTime = {
           hour: this.modalPlan.startWorkingTime.getHours(),
           minute: this.modalPlan.startWorkingTime.getMinutes()

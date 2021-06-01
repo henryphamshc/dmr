@@ -14,6 +14,7 @@ using DMR_API.SignalrHub;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Http;
 using CodeUtility;
+using DMR_API.Data;
 
 namespace DMR_API._Services.Services
 {
@@ -26,6 +27,7 @@ namespace DMR_API._Services.Services
         private readonly IKindRepository _repoKind;
         private readonly IMaterialRepository _repoMaterial;
         private readonly IHubContext<ECHub> _hubContext;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IModelNameRepository _repoModelName;
         private readonly IBPFCEstablishRepository _repoBPFC;
         private readonly IHttpContextAccessor _accessor;
@@ -42,6 +44,7 @@ namespace DMR_API._Services.Services
             IMaterialRepository repoMaterial,
             IBPFCEstablishRepository repoBPFC,
             IHubContext<ECHub> hubContext,
+            IUnitOfWork unitOfWork,
             IMapper mapper,
             MapperConfiguration configMapper)
         {
@@ -54,6 +57,7 @@ namespace DMR_API._Services.Services
             _repoKind = repoKind;
             _repoMaterial = repoMaterial;
             _hubContext = hubContext;
+            _unitOfWork = unitOfWork;
             _repoBPFC = repoBPFC;
             _repoModelName = repoModelName;
             _repoGlueIngredient = repoGlueIngredient;
@@ -80,7 +84,7 @@ namespace DMR_API._Services.Services
         //Thêm Brand mới vào bảng Glue
         public async Task<bool> Add(GlueCreateDto model)
         {
-            using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -139,12 +143,12 @@ namespace DMR_API._Services.Services
 
                     _repoGlue.Add(glue);
                     await _repoGlue.SaveAll();
-                    transaction.Complete();
+                    await transaction.CommitAsync();
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    transaction.Dispose();
+                    await transaction.RollbackAsync();
                     return false;
                 }
             }
@@ -195,7 +199,7 @@ namespace DMR_API._Services.Services
         //Cập nhật Brand
         public async Task<bool> Update(GlueCreateDto model)
         {
-             using var transaction = new TransactionScopeAsync().Create();
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
             {
                 try
                 {
@@ -224,13 +228,13 @@ namespace DMR_API._Services.Services
                         await _repoGlue.SaveAll();
                     }
                     await _hubContext.Clients.All.SendAsync("summaryRecieve", "ok");
-                    transaction.Complete();
+                    await transaction.CommitAsync();
                     return true;
 
                 }
                 catch 
                 {
-                    transaction.Dispose();
+                    await transaction.RollbackAsync();
                     return false;
                 }
             };

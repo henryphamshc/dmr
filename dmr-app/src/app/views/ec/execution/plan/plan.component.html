@@ -51,7 +51,7 @@
               </ng-template>
               <ng-template #editTemplate let-data>
                 <ejs-dropdownlist #buildingNameDropdownlist id="buildingNameDropdownlist" [dataSource]='lines'
-                  [placeholder]="'Select a line' | translate" [value]="data.buildingName" popupHeight='200px'
+                  [placeholder]="'Select a line' | translate" [value]="data.buildingID" popupHeight='200px'
                   popupWidth='250px' [fields]='fieldsLine' [allowFiltering]='true'
                   (change)='onChangeLine($event, data)'>
                 </ejs-dropdownlist>
@@ -62,7 +62,7 @@
                 {{'BPFC_NAME_LABEL' | translate}}
               </ng-template>
               <ng-template #editTemplate let-data>
-                <ejs-dropdownlist #bpfcDropdownlist id="bpfcDropdownlist" [dataSource]='BPFCs' [value]="data.bpfcName"
+                <ejs-dropdownlist #bpfcDropdownlist id="bpfcDropdownlist" [dataSource]='BPFCs' [value]="data.bpfcEstablishID"
                   (filtering)='onFiltering($event)' popupHeight='300px' popupWidth='450px'
                   [placeholder]="'Select a model' | translate" [fields]='fieldsBPFC' [allowFiltering]='true'
                   (change)='onChangeBPFC($event, data)'>
@@ -116,7 +116,7 @@
               </ng-template>
             </e-column>
 
-            <e-column field='hourlyOutput' editType='numericedit' format='####'
+            <e-column field='hourlyOutput' editType='numericedit' format='#'
               headerText="{{'HOURLY_OUTPUT_LABEL' | translate}}" width='115' textAlign='Center'>
               <ng-template #headerTemplate let-data>
                 {{'HOURLY_OUTPUT_LABEL' | translate}}
