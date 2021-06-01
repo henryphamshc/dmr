@@ -98,7 +98,7 @@ namespace DMR_API
                            .AllowAnyHeader()
                            //    .SetIsOriginAllowed(origin => true) // allow any origin
                            .AllowCredentials()); // allow credentials
-            //app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
             app.UseRouting();
             app.UseDefaultFiles();
             app.UseStaticFiles();

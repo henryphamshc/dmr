@@ -65,11 +65,11 @@ import 'web-animations-js';  // Run `npm install --save web-animations-js`.
  */
 import 'zone.js/dist/zone';  // Included with Angular CLI.
 
-(window as any).global = window;
-global.Buffer = global.Buffer || require('buffer').Buffer;
-global.process = require('process');
+// (window as any).global = window;
+// global.Buffer = global.Buffer || require('buffer').Buffer;
+// global.process = require('process');
 
 /***************************************************************************************************
  * APPLICATION IMPORTS
  */
-(window as any).global = window;
+//(window as any).global = window;

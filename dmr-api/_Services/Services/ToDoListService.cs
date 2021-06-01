@@ -246,7 +246,8 @@ namespace DMR_API._Services.Services
         // Helper for delay, todo
         List<ToDoListDto> MapToTodolistDto(List<ToDoList> model)
         {
-            var groupBy = model.GroupBy(x => new { x.EstimatedStartTime, x.EstimatedFinishTime, x.GlueNameID, x.PrintTime });
+            var groupBy = model.GroupBy(x => new 
+            { x.EstimatedStartTime, x.EstimatedFinishTime, x.GlueNameID, x.PrintTime });
             var todolist = new List<ToDoListDto>();
             foreach (var todo in groupBy)
             {
@@ -299,7 +300,8 @@ namespace DMR_API._Services.Services
             }
 
             // GroupBy period and then by glueName
-            var modelTemp = todolist.OrderBy(x => x.EstimatedStartTime).GroupBy(x => new { x.EstimatedStartTime, x.EstimatedFinishTime }).ToList();
+            var modelTemp = todolist.OrderBy(x => x.EstimatedStartTime)
+                .GroupBy(x => new { x.EstimatedStartTime, x.EstimatedFinishTime }).ToList();
             var result = new List<ToDoListDto>();
             foreach (var item in modelTemp)
             {
