@@ -6,6 +6,7 @@ import { InventoryComponent } from "./inventory/inventory.component";
 import { Consumption1Component } from "./consumption-1/consumption-1.component";
 import { Consumption2Component } from "./consumption-2/consumption-2.component";
 import { ConsumptionComponent } from "./consumption/consumption.component";
+import { Consumption3Component } from "./consumption-3/consumption-3.component";
 
 const routes: Routes = [
   {
@@ -42,6 +43,16 @@ const routes: Routes = [
           title: 'Consumption 2',
           breadcrumb: 'Consumption 2',
           functionCode: 'Consumption 2'
+        },
+        canActivate: [AuthGuard]
+      },
+      {
+        path: 'consumption-3',
+        component: Consumption3Component,
+        data: {
+          title: 'Consumption 3',
+          breadcrumb: 'Consumption 3',
+          functionCode: 'Consumption 3'
         },
         canActivate: [AuthGuard]
       },

@@ -48,6 +48,7 @@ import { ReportRoutingModule } from './report.routing.module';
 import { DeliveredHistoryComponent } from "./delivered-history/delivered-history.component";
 import { Consumption1Component } from "./consumption-1/consumption-1.component";
 import { Consumption2Component } from "./consumption-2/consumption-2.component";
+import { Consumption3Component } from "./consumption-3/consumption-3.component";
 import { ConsumptionComponent } from "./consumption/consumption.component";
 import { InventoryComponent } from './inventory/inventory.component';
 
@@ -121,6 +122,7 @@ if (lang === 'vi') {
     DeliveredHistoryComponent,
     InventoryComponent,
     Consumption1Component,
+    Consumption3Component,
     Consumption2Component,
     ConsumptionComponent
   ]

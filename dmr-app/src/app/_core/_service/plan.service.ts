@@ -86,6 +86,10 @@ export class PlanService {
     const params = { buildingID, startDate, endDate };
     return this.http.post<Consumtion[]>(this.baseUrl + 'Plan/ConsumptionByLineCase2', params );
   }
+  consumptionByLineCase3(buildingID: number, startDate: Date, endDate: Date) {
+    const params = { buildingID, startDate, endDate };
+    return this.http.post<Consumtion[]>(this.baseUrl + 'Plan/ConsumptionByLineCase3', params );
+  }
   reportConsumptionCase1(buildingID: number, startDate: Date, endDate: Date) {
     const params = { buildingID, startDate, endDate };
     return this.http.post(this.baseUrl + 'Plan/ReportConsumptionCase1', params, { responseType: 'blob' });
@@ -93,6 +97,10 @@ export class PlanService {
   reportConsumptionCase2(buildingID: number, startDate: Date, endDate: Date) {
     const params = { buildingID, startDate, endDate };
     return this.http.post(this.baseUrl + 'Plan/ReportConsumptionCase2', params, { responseType: 'blob' });
+  }
+  reportConsumptionCase3(buildingID: number, startDate: Date, endDate: Date) {
+    const params = { buildingID, startDate, endDate };
+    return this.http.post(this.baseUrl + 'Plan/ReportConsumptionCase3', params, { responseType: 'blob' });
   }
   dispatchGlue(obj) {
     return this.http.post(this.baseUrl + 'Plan/DispatchGlue', obj);

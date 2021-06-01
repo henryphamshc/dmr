@@ -313,6 +313,13 @@ namespace DMR_API.Controllers
             var lists = await _planService.ConsumptionByLineCase2(reportParams);
             return Ok(lists);
         }
+        [HttpPost]
+        public async Task<IActionResult> ConsumptionByLineCase3(ReportParams reportParams)
+        {
+            var lists = await _planService.ConsumptionByLineCase3(reportParams);
+            return Ok(lists);
+        }
+
         [HttpGet("{startDate}/{endDate}")]
         public async Task<IActionResult> Report(DateTime startDate, DateTime endDate)
         {
@@ -390,6 +397,23 @@ namespace DMR_API.Controllers
             {
                 var bin = await _planService.ReportConsumptionCase2(reportParams);
                 return File(bin, "application/octet-stream", "reportConsumption2.xlsx");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ReportConsumptionCase3(ReportParams reportParams)
+        {
+            var delta = reportParams.EndDate - reportParams.StartDate;
+            var str = Math.Abs(delta.TotalDays);
+            if (str > 31)
+            {
+                var error = $"Chỉ được xuất dữ liệu báo cáo trong 30 ngày!!!<br>The report data can only be exported for 30 days!!!";
+                return BadRequest(error);
+            }
+            else
+            {
+                var bin = await _planService.ReportConsumptionCase3(reportParams);
+                return File(bin, "application/octet-stream", "reportConsumption3.xlsx");
             }
         }
 
