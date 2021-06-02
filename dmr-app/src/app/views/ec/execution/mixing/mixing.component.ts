@@ -1,27 +1,24 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { HubConnectionBuilder } from '@microsoft/signalr';
+import { Subject, Subscription } from 'rxjs';
 import { IBuilding } from 'src/app/_core/_model/building';
+import { IMixingInfo } from 'src/app/_core/_model/plan';
+import { IRole } from 'src/app/_core/_model/role.js';
 import { IIngredient } from 'src/app/_core/_model/summary';
 import { AbnormalService } from 'src/app/_core/_service/abnormal.service';
 import { AlertifyService } from 'src/app/_core/_service/alertify.service';
 import { IngredientService } from 'src/app/_core/_service/ingredient.service';
 import { MakeGlueService } from 'src/app/_core/_service/make-glue.service';
-// import * as signalr from '../../../../assets/js/ec-client.js';
-// import * as signalr from '../../../../assets/js/weighing-scale-client.js';
-import { NgxSpinnerService } from 'ngx-spinner';
+import { SettingService } from 'src/app/_core/_service/setting.service';
 
 import { debounceTime } from 'rxjs/operators';
+import { IScanner } from 'src/app/_core/_model/IToDoList';
+import { IMixingDetailForResponse } from 'src/app/_core/_model/IMixingInfo';
+import { environment } from 'src/environments/environment';
 import { MixingService } from 'src/app/_core/_service/mixing.service';
 import { AutoSelectDirective } from '../../select.directive';
-import { IMixingDetailForResponse } from 'src/app/_core/_model/IMixingInfo';
-import { IScanner } from 'src/app/_core/_model/IToDoList';
-import { IMixingInfo } from 'src/app/_core/_model/plan';
-import { IRole } from 'src/app/_core/_model/role';
-import { SettingService } from 'src/app/_core/_service/setting.service';
 import { TodolistService } from 'src/app/_core/_service/todolist.service';
-import { environment } from 'src/environments/environment';
 
 const SUMMARY_RECIEVE_SIGNALR = 'ok';
 const BIG_MACHINE_UNIT = 'k';
@@ -91,7 +88,6 @@ export class MixingComponent implements OnInit, OnDestroy {
     private abnormalService: AbnormalService,
     private mixingService: MixingService,
     private router: Router,
-    private spinner: NgxSpinnerService,
     private settingService: SettingService,
     public todolistService: TodolistService
   ) {
@@ -129,13 +125,11 @@ export class MixingComponent implements OnInit, OnDestroy {
   }
   start() {
     CONNECTION_WEIGHING_SCALE_HUB.start().then(() => {
-
       CONNECTION_WEIGHING_SCALE_HUB.on('UserConnected', (conId) => {
         console.log('CONNECTION_WEIGHING_SCALE_HUB UserConnected', conId);
       });
       CONNECTION_WEIGHING_SCALE_HUB.on('UserDisconnected', (conId) => {
         console.log('CONNECTION_WEIGHING_SCALE_HUB UserDisconnected', conId);
-
       });
       console.log('Signalr CONNECTION_WEIGHING_SCALE_HUB connected');
     }).catch((err) => {
@@ -156,38 +150,53 @@ export class MixingComponent implements OnInit, OnDestroy {
         const item = arg.ingredient;
         this.ingredientsTamp = item;
         this.position = item.position;
-        const input = args.split('-') || [];
-        const dateAndBatch = /(\d+)-(\w+)-/g;
-        const qr = args.match(item.materialNO);
-        const validFormat = args.match(dateAndBatch);
-        const qrcode = args.replace(validFormat[0], '');
+
+        // Update 08/04/2021 - Leo
+        const input = args.split('    ') || [];
+        const qr = item.partNO;
+        var qrcode = null
+        try {
+          qrcode = input[2].split(":")[1].trim() + ':' + input[0].split(":")[1].trim().replace(' ', '').toUpperCase();
+        } catch (error) {
+          qrcode = null
+        }
+
+         // End update
         if (qr === null) {
           this.alertify.warning(`Mã QR không hợp lệ!<br>The QR Code invalid!`);
           this.qrCode = '';
           this.errorScan();
+          this.offSignalr();
           return;
         }
         if (qr !== null) {
           try {
+
             // check neu batch va code giong nhau
-            if (qrcode !== qr[0]) {
+            if (qrcode !== qr) {
               this.alertify.warning(`Mã QR không hợp lệ!<br>Please you should look for the chemical name "${item.name}"`);
               this.qrCode = '';
               this.errorScan();
+              this.offSignalr();
               return;
             }
-            this.qrCode = qr[0];
+
+            this.qrCode = qr;
             // const result = await this.scanQRCode();
-            if (this.qrCode !== item.materialNO) {
+
+            if (this.qrCode !== item.partNO) { // Update 08/04/2021 - Leo
               this.alertify.warning(`Mã QR không hợp lệ!<br>Please you should look for the chemical name "${item.name}"`);
               this.qrCode = '';
               this.errorScan();
+              this.offSignalr();
               return;
             }
+
             if (item.position === 'A') {
               this.stdcon = this.scalingKG === SMALL_MACHINE_UNIT ? this.stdcon * 1000 : this.stdcon;
               this.changeExpected('A', this.stdcon);
               this.checkedSmallScale = true;
+              this.offSignalr();
               this.startTime = new Date();
             }
             // const checkIncoming = await this.checkIncoming(item.name, this.level.name, input[1]);
@@ -197,11 +206,13 @@ export class MixingComponent implements OnInit, OnDestroy {
             //   this.errorScan();
             //   return;
             // }
+
             const checkLock = await this.hasLock(
               item.name,
               this.building.name,
               input[1]
             );
+
             if (checkLock === true) {
               this.alertify.error('Hóa chất này đã bị khóa!<br>This chemical has been locked!');
               this.qrCode = '';
@@ -210,12 +221,14 @@ export class MixingComponent implements OnInit, OnDestroy {
             }
 
             /// Khi quét qr-code thì chạy signal
-            this.signal();
 
             const code = item.code;
             const ingredient = this.findIngredientCode(code);
             this.setBatch(ingredient, input[1]);
+
             if (ingredient) {
+              this.mixingService.connect();
+              this.signal();
               this.changeInfo('success-scan', ingredient.code);
               if (ingredient.expected === 0 && ingredient.position === 'A') {
                 this.changeFocusStatus(ingredient.code, false, true);
@@ -225,6 +238,7 @@ export class MixingComponent implements OnInit, OnDestroy {
                 this.changeFocusStatus(code, false, false);
               }
             }
+
             // chuyển vị trí quét khi scan
             switch (this.position) {
               case 'A':
@@ -238,27 +252,22 @@ export class MixingComponent implements OnInit, OnDestroy {
               case 'C':
                 this.changeScanStatusByPosition('C', false);
                 // Update by Leo 3/1/2021
-                this.mixingService.connect();
                 this.changeScanStatusByPosition('D', true);
                 break;
               case 'D':
                 this.changeScanStatusByPosition('D', false);
                 // Update by Leo 3/1/2021
-                this.mixingService.connect();
                 this.changeScanStatusByPosition('E', true);
                 break;
               case 'E':
                 // Update by Leo 3/1/2021
-                this.mixingService.connect();
                 this.changeScanStatusByPosition('H', true);
                 break;
             }
           } catch (error) {
-            console.log('tag', error);
             this.errorScan();
             this.alertify.error('Mã QR không hợp lệ!<br>Wrong Chemical!');
             this.qrCode = '';
-            return;
           }
         }
       }
@@ -275,8 +284,8 @@ export class MixingComponent implements OnInit, OnDestroy {
       this.getGlueWithIngredientByGlueID();
     });
   }
+
   getGlueWithIngredientByGlueID() {
-    this.spinner.show();
     this.makeGlueService
       .getGlueWithIngredientByGlueID(this.glueID)
       .subscribe((res: any) => {
@@ -287,6 +296,7 @@ export class MixingComponent implements OnInit, OnDestroy {
             code: item.code,
             scanCode: '',
             materialNO: item.materialNO,
+            partNO: item.partNO,
             name: item.name,
             percentage: item.percentage,
             position: item.position,
@@ -304,9 +314,6 @@ export class MixingComponent implements OnInit, OnDestroy {
         });
         this.glueName = res.name;
         this.getMixingDetail();
-        this.spinner.hide();
-      }, err => {
-        this.spinner.hide();
       });
   }
 
@@ -342,7 +349,7 @@ export class MixingComponent implements OnInit, OnDestroy {
     for (const i in this.ingredients) {
       if (this.ingredients[i].code === code) {
         this.ingredients[i].scanStatus = scanStatus;
-        break; // Stop this loop, we found it!
+        break;
       }
     }
   }
@@ -351,7 +358,7 @@ export class MixingComponent implements OnInit, OnDestroy {
       if (this.ingredients[i].code === code) {
         this.ingredients[i].focusReal = focusReal;
         this.ingredients[i].focusExpected = focusExpected;
-        break; // Stop this loop, we found it!
+        break;
       }
     }
   }
@@ -359,7 +366,7 @@ export class MixingComponent implements OnInit, OnDestroy {
     for (const i in this.ingredients) {
       if (this.ingredients[i].code === code) {
         this.ingredients[i].valid = validStatus;
-        break; // Stop this loop, we found it!
+        break;
       }
     }
   }
@@ -369,7 +376,6 @@ export class MixingComponent implements OnInit, OnDestroy {
       if (this.ingredients[i].position === position) {
         this.ingredients[i].scanStatus = scanStatus;
         break;
-        // Stop this loop, we found it!
       }
     }
   }
@@ -385,7 +391,7 @@ export class MixingComponent implements OnInit, OnDestroy {
     for (const i in this.ingredients) {
       if (this.ingredients[i].code === code) {
         this.ingredients[i].info = info;
-        break; // Stop this loop, we found it!
+        break;
       }
     }
   }
@@ -393,7 +399,7 @@ export class MixingComponent implements OnInit, OnDestroy {
     for (const i in this.ingredients) {
       if (this.ingredients[i].position === position) {
         this.ingredients[i].scanStatus = status;
-        break; // Stop this loop, we found it!
+        break;
       }
     }
   }
@@ -457,7 +463,7 @@ export class MixingComponent implements OnInit, OnDestroy {
         const expectedResult = expected;
         // const expectedResult = this.toFixedIfNecessary(expected, 2);
         this.ingredients[i].expected = expectedResult;
-        break; // Stop this loop, we found it!
+        break;
       }
     }
   }
@@ -468,7 +474,7 @@ export class MixingComponent implements OnInit, OnDestroy {
         this.ingredients[i].real = actual;
         this.ingredients[i].unit = unit;
         this.ingredients[i].time_start = new Date(); // leo update
-        break; // Stop this loop, we found it!
+        break;
       }
     }
   }
@@ -493,6 +499,7 @@ export class MixingComponent implements OnInit, OnDestroy {
     let minG;
     let maxG;
     const currentValue = ingredient.position === 'A' && this.scalingKG === SMALL_MACHINE_UNIT ? parseFloat(args) / 1000 : parseFloat(args);
+
     if (ingredient.allow === 0) {
       const unit = ingredient.position === 'A' ? this.stdcon : ingredient.expected.replace(/[0-9|.]+/g, '').trim();
       if (unit !== SMALL_MACHINE_UNIT) {
@@ -680,13 +687,16 @@ export class MixingComponent implements OnInit, OnDestroy {
     }
     this.changeReal(ingredient.code, +args);
   }
+
   private offSignalr() {
     CONNECTION_WEIGHING_SCALE_HUB.off('Welcom');
     this.mixingService.offWeighingScale();
   }
+
   private onSignalr() {
     // CONNECTION_WEIGHING_SCALE_HUB.on('Welcom', () => {});
   }
+
   private changeScanStatusByLength(length, item) {
     switch (length) {
       case 2:
@@ -739,6 +749,7 @@ export class MixingComponent implements OnInit, OnDestroy {
         break; // Focus E
     }
   }
+
   private setActualByExpectedRange(i) {
     const ingredient = this.ingredients[i];
     if (ingredient.allow > 0) {
@@ -759,6 +770,7 @@ export class MixingComponent implements OnInit, OnDestroy {
       }
     }
   }
+
   private changeReal(code, real) {
     for (const i in this.ingredients) {
       if (this.ingredients[i].code === code) {
@@ -766,10 +778,11 @@ export class MixingComponent implements OnInit, OnDestroy {
           // this.setActualByExpectedRange(i);
         }
         this.ingredients[i].real = this.toFixedIfNecessary(real, 3);
-        break; // Stop this loop, we found it!
+        break;
       }
     }
   }
+
   private startScalingHub() {
     CONNECTION_WEIGHING_SCALE_HUB.start().then(() => {
       CONNECTION_WEIGHING_SCALE_HUB.on('Scaling Hub UserConnected', (conId) => {
@@ -784,6 +797,7 @@ export class MixingComponent implements OnInit, OnDestroy {
       setTimeout(() => this.startScalingHub(), 5000);
     });
   }
+
   private signal() {
     this.mixingService.receiveAmount.subscribe(res => {
       const unit = res.unit;
@@ -833,61 +847,9 @@ export class MixingComponent implements OnInit, OnDestroy {
         }
       }
     });
-    // if (CONNECTION_WEIGHING_SCALE_HUB.state === HubConnectionState.Connected) {
-    //   CONNECTION_WEIGHING_SCALE_HUB.on(
-    //     'Welcom',
-    //     (scalingMachineID, message, unit) => {
-    //       if (this.scalingSetting.includes(+scalingMachineID)) {
-    //         if (unit === this.scalingKG) {
-    //           this.volume = parseFloat(message);
-    //           this.unit = unit;
-    //           console.log('Unit', unit, message, scalingMachineID);
-    //           /// update real A sau do show real B, tinh lai expected
-    //           switch (this.position) {
-    //             case 'A':
-    //               this.volumeA = this.volume;
-    //               break;
-    //             case 'B':
-    //               if (unit !== SMALL_MACHINE_UNIT) {
-    //                 // update realA
-    //                 this.volumeB = this.volume;
-    //                 this.changeActualByPosition('A', this.volumeB, unit);
-    //                 this.checkValidPosition(this.ingredientsTamp, this.volumeB);
-    //               } else {
-    //                 this.volumeB = this.volume;
-    //                 this.changeActualByPosition('A', this.volumeB, unit);
-    //                 this.checkValidPosition(this.ingredientsTamp, this.volumeB);
-    //               }
-    //               break;
-    //             case 'C':
-    //               this.volumeC = this.volume;
-    //               this.changeActualByPosition('B', this.volumeC, unit);
-    //               this.checkValidPosition(this.ingredientsTamp, this.volumeC);
-    //               break;
-    //             case 'D':
-    //               this.volumeD = this.volume;
-    //               this.changeActualByPosition('C', this.volumeD, unit);
-    //               this.checkValidPosition(this.ingredientsTamp, this.volumeD);
-    //               break;
-    //             case 'E':
-    //               this.volumeE = this.volume;
-    //               this.changeActualByPosition('D', this.volumeE, unit);
-    //               this.checkValidPosition(this.ingredientsTamp, this.volumeE);
-    //               break;
-    //             case 'H':
-    //               this.volumeH = this.volume;
-    //               this.changeActualByPosition('E', this.volumeH, unit);
-    //               this.checkValidPosition(this.ingredientsTamp, this.volumeH);
-    //               break;
-    //           }
-    //         }
-    //       }
-    //     }
-    //   );
-    // } else {
-    //   this.startScalingHub();
-    // }
+
   }
+
   // event
   showArrow(item): boolean {
     if (item.position === 'A' && item.scanStatus === true) {
@@ -967,7 +929,6 @@ export class MixingComponent implements OnInit, OnDestroy {
           this.disabled = true;
           this.changeFocusStatus(ingredient.code, false, false);
           this.changeValidStatus(ingredient.code, true);
-          // this.alertify.warning(`Invalid!`, true);
         }
       } else {
         this.scalingKG = SMALL_MACHINE_UNIT;
@@ -983,7 +944,6 @@ export class MixingComponent implements OnInit, OnDestroy {
           this.disabled = true;
           this.changeFocusStatus(ingredient.code, false, false);
           this.changeValidStatus(ingredient.code, true);
-          // this.alertify.warning(`Invalid!`, true);
         }
       }
     }
@@ -1004,7 +964,6 @@ export class MixingComponent implements OnInit, OnDestroy {
           this.disabled = true;
           this.changeFocusStatus(ingredient.code, false, false);
           this.changeValidStatus(ingredient.code, true);
-          // this.alertify.warning(`Invalid!`, true);
         }
       } else {
         this.scalingKG = SMALL_MACHINE_UNIT;
@@ -1020,7 +979,6 @@ export class MixingComponent implements OnInit, OnDestroy {
           this.disabled = true;
           this.changeFocusStatus(ingredient.code, false, false);
           this.changeValidStatus(ingredient.code, true);
-          // this.alertify.warning(`Invalid!`, true);
         }
       }
     }
@@ -1041,7 +999,6 @@ export class MixingComponent implements OnInit, OnDestroy {
           this.disabled = true;
           this.changeFocusStatus(ingredient.code, false, false);
           this.changeValidStatus(ingredient.code, true);
-          // this.alertify.warning(`Invalid!`, true);
         }
       } else {
         this.scalingKG = SMALL_MACHINE_UNIT;
@@ -1057,7 +1014,6 @@ export class MixingComponent implements OnInit, OnDestroy {
           this.disabled = true;
           this.changeFocusStatus(ingredient.code, false, false);
           this.changeValidStatus(ingredient.code, true);
-          // this.alertify.warning(`Invalid!`, true);
         }
       }
     }
@@ -1077,7 +1033,6 @@ export class MixingComponent implements OnInit, OnDestroy {
           this.disabled = true;
           this.changeFocusStatus(ingredient.code, false, false);
           this.changeValidStatus(ingredient.code, true);
-          // this.alertify.warning(`Invalid!`, true);
         }
       } else {
         this.scalingKG = SMALL_MACHINE_UNIT;
@@ -1093,7 +1048,6 @@ export class MixingComponent implements OnInit, OnDestroy {
           this.disabled = true;
           this.changeFocusStatus(ingredient.code, false, false);
           this.changeValidStatus(ingredient.code, true);
-          // this.alertify.warning(`Invalid!`, true);
         }
       }
     }
@@ -1110,16 +1064,6 @@ export class MixingComponent implements OnInit, OnDestroy {
   onKeyupReal(ingredient, args) {
     if (args.keyCode === 13) {
       this.checkValidPositionForRealEvent(ingredient, args);
-      // this.checkValidPosition(item, args);
-      // const buildingName = this.building.name;
-      // this.UpdateConsumption(item.code, item.batch, item.real);
-      // const obj = {
-      //   qrCode: ingredient.code,
-      //   batch: ingredient.batch,
-      //   consump: ingredient.real,
-      //   buildingName,
-      // };
-      // this.UpdateConsumptionWithBuilding(obj);
     }
   }
   onDblClicked(ingredient, args) {
@@ -1135,6 +1079,7 @@ export class MixingComponent implements OnInit, OnDestroy {
       return;
     }
   }
+
   onKeyupExpected(item, args) {
     if (args.keyCode === 13) {
       if (item.position === 'A') {
@@ -1167,9 +1112,7 @@ export class MixingComponent implements OnInit, OnDestroy {
 
   // api
   back() {
-    this.router.navigate([
-      `/ec/execution/todolist-2/${this.tab}`
-    ]);
+    this.router.navigate([`/ec/execution/todolist-2/${this.tab}`]);
   }
   private getScalingSetting() {
     this.buildingID = this.BUIDLING_ID;
@@ -1207,6 +1150,7 @@ export class MixingComponent implements OnInit, OnDestroy {
       return;
     }
     this.endTime = new Date();
+
     const details = this.ingredients.map(item => {
       const amountTemp = item.unit === SMALL_MACHINE_UNIT ? item.real / 1000 : item.real;
       // console.log('finish', amount, item);
@@ -1216,9 +1160,10 @@ export class MixingComponent implements OnInit, OnDestroy {
         batch: item.batch,
         mixingInfoID: 0,
         position: item.position,
-        time_start: item.time_start // Thêm bởi Quỳnh (Leo 2/2/2021 11:46)
+        time_start: item.time_start // Thêm bởi Quỳnh (2/2/2021 11:46)
       };
     });
+
     const mixing = {
       glueID: this.glueID,
       glueName: this.glueName,
@@ -1235,21 +1180,12 @@ export class MixingComponent implements OnInit, OnDestroy {
     // this.onSignalr();
     if (mixing) {
       this.makeGlueService.add(mixing).subscribe((glue: any) => {
-        // this.checkValidPosition(item, args);
-        // const buildingName = this.building.name;
-        // this.UpdateConsumption(item.code, item.batch, item.real);
-        // const obj = {
-        //   qrCode: ingredient.code,
-        // batch: ingredient.batch,
-        //   consump: ingredient.real,
-        //   buildingName,
-        // };
-        // this.UpdateConsumptionWithBuilding(obj);
         this.todolistService.setValue(false);
         this.back();
         this.alertify.success('The Glue has been finished successfully');
       });
     }
+
   }
   convertDate(date: Date) {
     const tzoffset = date.getTimezoneOffset() * 60000; // offset in milliseconds

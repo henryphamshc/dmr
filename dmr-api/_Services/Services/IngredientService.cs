@@ -60,6 +60,11 @@ namespace DMR_API._Services.Services
             _repoGlue = repoGlue;
             _repoMixingInfo = repoMixingInfo;
         }
+
+        public async Task<bool> CheckExistsIngredient(string name, string material)
+        {
+            return await _repoIngredient.FindAll().AnyAsync(x => x.isShow && x.MaterialNO.Trim().ToLower().Equals(material.Trim().ToLower()) && x.Name.Trim().ToLower().Equals(name.Trim().ToLower()));
+        }
         public async Task<bool> CheckExists(int id)
         {
             return await _repoIngredient.CheckExists(id);
@@ -84,13 +89,32 @@ namespace DMR_API._Services.Services
 
         public async Task<bool> Add1(IngredientDto1 model)
         {
+            //string token = _accessor.HttpContext.Request.Headers["Authorization"];
+            //var userID = JWTExtensions.GetDecodeTokenByProperty(token, "nameid").ToInt();
+            //if (userID == 0) return false;
+            //var ingredient = _mapper.Map<Ingredient>(model);
+            //ingredient.isShow = true;
+            //ingredient.CreatedBy = userID;
+            //_repoIngredient.Add(ingredient);
+            //return await _repoIngredient.SaveAll();
             string token = _accessor.HttpContext.Request.Headers["Authorization"];
             var userID = JWTExtensions.GetDecodeTokenByProperty(token, "nameid").ToInt();
             if (userID == 0) return false;
-            var ingredient = _mapper.Map<Ingredient>(model);
-            ingredient.isShow = true;
-            ingredient.CreatedBy = userID;
-            _repoIngredient.Add(ingredient);
+            var exist = _repoIngredient.FindAll().FirstOrDefault(x => x.MaterialNO.Trim().ToLower().Equals(model.MaterialNO.Trim().ToLower()) && x.Name.Trim().ToLower().Equals(model.Name.Trim().ToLower()));
+            if (exist != null)
+            {
+                exist.isShow = true;
+
+            }
+            else
+            {
+                var ingredient = _mapper.Map<Ingredient>(model);
+                ingredient.isShow = true;
+                var supplier_name = _repoSupplier.FindAll().FirstOrDefault(x => x.ID == model.SupplierID).Name;
+                ingredient.PartNO = model.PartNO + ':' + supplier_name;
+                ingredient.CreatedBy = userID;
+                _repoIngredient.Add(ingredient);
+            }
             return await _repoIngredient.SaveAll();
         }
 
