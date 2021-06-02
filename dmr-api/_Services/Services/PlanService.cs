@@ -52,6 +52,7 @@ namespace DMR_API._Services.Services
         private readonly IPeriodRepository _repoPeriod;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IDispatchListRepository _repoDispatchList;
+        private readonly IAdditionRepository _repoAddition;
         private readonly IMapper _mapper;
         private readonly MapperConfiguration _configMapper;
         public PlanService(
@@ -77,6 +78,7 @@ namespace DMR_API._Services.Services
             IJWTService jwtService,
             IHttpContextAccessor accessor,
             IMapper mapper,
+            IAdditionRepository repoAddition,
             MapperConfiguration configMapper)
         {
             _configMapper = configMapper;
@@ -102,6 +104,7 @@ namespace DMR_API._Services.Services
             _repoPeriod = repoPeriod;
             _unitOfWork = unitOfWork;
             _repoDispatchList = repoDispatchList;
+            _repoAddition = repoAddition;
         }
 
         #endregion
@@ -1728,6 +1731,103 @@ namespace DMR_API._Services.Services
             return res.OrderByDescending(x => x.DueDate).OrderBy(x => x.DueDate).ThenBy(x => x.Line).ThenBy(x => x.ID).ThenByDescending(x => x.Percentage).ToList();
         }
 
+        public async Task<List<ConsumtionDto>> ConsumptionByLineCase3(ReportParams reportParams)
+        {
+            var res = await ConsumptionReportByBuildingForAddition(reportParams);
+
+            return res.OrderByDescending(x => x.DueDate).OrderBy(x => x.DueDate).ThenBy(x => x.Line).ThenBy(x => x.ID).ThenByDescending(x => x.Percentage).ToList();
+        }
+
+        private async Task<List<ConsumtionDto>> ConsumptionReportByBuildingForAddition(ReportParams reportParams)
+        {
+            var startDate = reportParams.StartDate.Date;
+            var endDate = reportParams.EndDate.Date;
+            var buildingID = reportParams.BuildingID;
+            var lines = new List<int>();
+            if (buildingID == 0)
+            {
+                lines = await _repoBuilding.FindAll(x => x.Level == LINE_LEVEL).Select(x => x.ID).ToListAsync();
+            }
+            else
+            {
+                lines = await _repoBuilding.FindAll(x => x.ParentID == buildingID).Select(x => x.ID).ToListAsync();
+            }
+            //var buildingGlueModel = await _repoBuildingGlue.FindAll(x => x.CreatedDate.Date >= startDate && x.CreatedDate.Date <= endDate && lines.Contains(x.BuildingID)).Include(x => x.MixingInfo).ToListAsync();
+            var AdditionModel = _repoAddition.FindAll(x => x.CreatedTime.Date >= startDate && x.CreatedTime.Date <= endDate && lines.Contains(x.LineID));
+            var model = await AdditionModel
+                 .Include(x => x.Building)
+                .Include(x => x.Ingredient)
+                .Include(x => x.BPFCEstablish)
+                    .ThenInclude(x => x.ModelName)
+                 .Include(x => x.BPFCEstablish)
+                    .ThenInclude(x => x.ModelNo)
+                 .Include(x => x.BPFCEstablish)
+                    .ThenInclude(x => x.ArticleNo)
+                 .Include(x => x.BPFCEstablish)
+                    .ThenInclude(x => x.ArtProcess)
+                    .ThenInclude(x => x.Process)
+                 .Where(x => !x.BPFCEstablish.IsDelete)
+                 .Select(x => new
+                 {
+                     x.BPFCEstablishID,
+                     x.Amount,
+                     x.CreatedTime.Date,
+                     x.LineID,
+                     Line = x.Building.Name,
+                     GlueName = x.Ingredient.Name,
+                     ModelName = x.BPFCEstablish.ModelName.Name,
+                     ModelNo = x.BPFCEstablish.ModelNo.Name,
+                     ArticleNo = x.BPFCEstablish.ArticleNo.Name,
+                     Process = x.BPFCEstablish.ArtProcess.Process.Name,
+                 })
+                 .ToListAsync();
+
+            var list = new List<ConsumtionDto>();
+
+            foreach (var item in model)
+            {
+                var std = item.Amount.ToFloat();
+                list.Add(new ConsumtionDto
+                {
+                    ModelName = item.ModelName,
+                    ModelNo = item.ModelNo,
+                    ArticleNo = item.ArticleNo,
+                    Process = item.Process,
+                    Line = item.Line,
+                    Glue = item.GlueName,
+                    Std = std,
+                    ID = item.BPFCEstablishID,
+                    DueDate = item.Date,
+                });
+            }
+
+            var items = list.GroupBy(t => new {
+                t.Glue,
+                t.ModelNo,
+                t.ModelName,
+                t.ID,
+                t.Line,
+                t.ArticleNo,
+                t.Process
+            })
+                .Select(t => new ConsumtionDto
+                {
+                    ModelName = t.FirstOrDefault().ModelName,
+                    ModelNo = t.FirstOrDefault().ModelNo,
+                    ArticleNo = t.FirstOrDefault().ArticleNo,
+                    Process = t.FirstOrDefault().Process,
+                    Line = t.FirstOrDefault().Line,
+                    Glue = t.FirstOrDefault().Glue,
+                    Std = t.Sum(ta => ta.Std),
+                    ID = t.FirstOrDefault().ID,
+                    DueDate = t.FirstOrDefault().DueDate,
+
+                }).ToList();
+            //return items;
+            return items.ToList();
+           // throw new NotImplementedException();
+        }
+
         private async Task<List<ConsumtionDto>> ConsumptionReportByBuilding(ReportParams reportParams)
         {
             var startDate = reportParams.StartDate.Date;
@@ -1815,6 +1915,12 @@ namespace DMR_API._Services.Services
         {
             var res = await ConsumptionReportByBuilding(reportParams);
             return ExportExcelConsumptionCase2(res);
+        }
+
+        public async Task<byte[]> ReportConsumptionCase3(ReportParams reportParams)
+        {
+            var res = await ConsumptionReportByBuildingForAddition(reportParams);
+            return ExportExcelConsumptionCase3(res);
         }
 
         public async Task<byte[]> ReportConsumptionCase1(ReportParams reportParams)
@@ -2453,6 +2559,168 @@ namespace DMR_API._Services.Services
                         ws.Cells[mergeFromRowIndex, 6, mergeToRowIndex, 6].Merge = true;
                         ws.Cells[mergeFromRowIndex, 6, mergeToRowIndex, 6].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
                         ws.Cells[mergeFromRowIndex, 6, mergeToRowIndex, 6].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                        mergeFromRowIndex = mergeToRowIndex + 1;
+                    }
+                    //make the borders of cell F6 thick
+                    ws.Cells[ws.Dimension.Address].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    ws.Cells[ws.Dimension.Address].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    ws.Cells[ws.Dimension.Address].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    ws.Cells[ws.Dimension.Address].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    foreach (var item in headers.Select((x, i) => new { Value = x, Index = i }))
+                    {
+                        var col = item.Index + 1;
+                        ws.Column(col).Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                        ws.Column(col).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                        if (col == 2 || col == 7)
+                        {
+                            ws.Column(col).AutoFit(30);
+                        }
+                        else
+                        {
+                            ws.Column(col).AutoFit();
+                        }
+                    }
+
+                    //Lưu file lại
+                    Byte[] bin = p.GetAsByteArray();
+                    return bin;
+                }
+            }
+            catch (Exception ex)
+            {
+                var mes = ex.Message;
+                Console.Write(mes);
+                return new Byte[] { };
+            }
+        }
+
+        private Byte[] ExportExcelConsumptionCase3(List<ConsumtionDto> consumtionDtos)
+        {
+            try
+            {
+                consumtionDtos = consumtionDtos.OrderByDescending(x => x.DueDate).OrderBy(x => x.DueDate).ThenBy(x => x.Line).ThenBy(x => x.ID).ThenByDescending(x => x.Percentage).ToList();
+                ExcelPackage.LicenseContext = LicenseContext.Commercial;
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                var memoryStream = new MemoryStream();
+                using (ExcelPackage p = new ExcelPackage(memoryStream))
+                {
+                    // đặt tên người tạo file
+                    p.Workbook.Properties.Author = "Henry Pham";
+
+                    // đặt tiêu đề cho file
+                    p.Workbook.Properties.Title = "ReportConsumption";
+                    //Tạo một sheet để làm việc trên đó
+                    p.Workbook.Worksheets.Add("ReportConsumption");
+
+                    // lấy sheet vừa add ra để thao tác
+                    ExcelWorksheet ws = p.Workbook.Worksheets["ReportConsumption"];
+
+                    // đặt tên cho sheet
+                    ws.Name = "ReportConsumption";
+                    // fontsize mặc định cho cả sheet
+                    ws.Cells.Style.Font.Size = 12;
+                    // font family mặc định cho cả sheet
+                    ws.Cells.Style.Font.Name = "Calibri";
+                    var headers = new string[]{
+                        "Line", "Model Name", "Model No.", "Article No.",
+                        "Process", "Glue", "Std.(g)"
+                    };
+
+                    int headerRowIndex = 1;
+                    int headerColIndex = 1;
+                    foreach (var header in headers)
+                    {
+                        int col = headerRowIndex++;
+                        ws.Cells[headerColIndex, col].Value = header;
+                        ws.Cells[headerColIndex, col].Style.Font.Bold = true;
+                        ws.Cells[headerColIndex, col].Style.Font.Size = 12;
+                    }
+
+                    // end Style
+                    int colIndex = 1;
+                    int rowIndex = 1;
+                    // với mỗi item trong danh sách sẽ ghi trên 1 dòng
+                    foreach (var body in consumtionDtos)
+                    {
+                        // bắt đầu ghi từ cột 1. Excel bắt đầu từ 1 không phải từ 0 #c0514d
+                        colIndex = 1;
+
+                        // rowIndex tương ứng từng dòng dữ liệu
+                        rowIndex++;
+
+
+                        //gán giá trị cho từng cell                      
+                        ws.Cells[rowIndex, colIndex++].Value = body.Line;
+                        ws.Cells[rowIndex, colIndex++].Value = body.ModelName;
+                        ws.Cells[rowIndex, colIndex++].Value = body.ModelNo;
+                        ws.Cells[rowIndex, colIndex++].Value = body.ArticleNo;
+                        ws.Cells[rowIndex, colIndex++].Value = body.Process;
+                        ws.Cells[rowIndex, colIndex++].Value = body.Glue;
+                        ws.Cells[rowIndex, colIndex++].Value = body.Std;
+                        
+                    }
+                    int colPatternIndex = 1;
+                    int rowPatternIndex = 1;
+
+                    int colColorIndex = 1;
+                    int rowColorIndex = 1;
+                    foreach (var body in consumtionDtos)
+                    {
+                        rowColorIndex++;
+                        rowPatternIndex++;
+
+                        if (body.Percentage > 0)
+                        {
+                            colPatternIndex = 7;
+                            colColorIndex = 7;
+                            ws.Cells[rowPatternIndex, colPatternIndex++].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            ws.Cells[rowPatternIndex, colPatternIndex++].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            ws.Cells[rowPatternIndex, colPatternIndex++].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            ws.Cells[rowPatternIndex, colPatternIndex++].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            ws.Cells[rowPatternIndex, colPatternIndex++].Style.Fill.PatternType = ExcelFillStyle.Solid;
+
+                            ws.Cells[rowColorIndex, colColorIndex++].Style.Fill.BackgroundColor.SetColor(ColorTranslator.FromHtml("#FFFF66"));
+                            ws.Cells[rowColorIndex, colColorIndex++].Style.Fill.BackgroundColor.SetColor(ColorTranslator.FromHtml("#FFFF66"));
+                            ws.Cells[rowColorIndex, colColorIndex++].Style.Fill.BackgroundColor.SetColor(ColorTranslator.FromHtml("#FFFF66"));
+                            ws.Cells[rowColorIndex, colColorIndex++].Style.Fill.BackgroundColor.SetColor(ColorTranslator.FromHtml("#FFFF66"));
+                            ws.Cells[rowColorIndex, colColorIndex++].Style.Fill.BackgroundColor.SetColor(ColorTranslator.FromHtml("#FFFF66"));
+                        }
+                    }
+                    int mergeFromColIndex = 1;
+                    int mergeToColIndex = 1;
+                    int mergeFromRowIndex = 2;
+                    int mergeToRowIndex = 1;
+                    foreach (var item in consumtionDtos.GroupBy(x => new
+                    {
+                        x.ID,
+                        x.Line,
+                        x.ModelName,
+                        x.ModelNo,
+                        x.ArticleNo,
+                        x.Process
+                    }))
+                    {
+                        mergeToRowIndex += item.Count();
+                        ws.Cells[mergeFromRowIndex, mergeFromColIndex, mergeToRowIndex, mergeToColIndex].Merge = true;
+                        ws.Cells[mergeFromRowIndex, mergeFromColIndex, mergeToRowIndex, mergeToColIndex].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                        ws.Cells[mergeFromRowIndex, mergeFromColIndex, mergeToRowIndex, mergeToColIndex].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                        ws.Cells[mergeFromRowIndex, 2, mergeToRowIndex, 2].Merge = true;
+                        ws.Cells[mergeFromRowIndex, 2, mergeToRowIndex, 2].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                        ws.Cells[mergeFromRowIndex, 2, mergeToRowIndex, 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                        ws.Cells[mergeFromRowIndex, 3, mergeToRowIndex, 3].Merge = true;
+                        ws.Cells[mergeFromRowIndex, 3, mergeToRowIndex, 3].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                        ws.Cells[mergeFromRowIndex, 3, mergeToRowIndex, 3].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                        ws.Cells[mergeFromRowIndex, 4, mergeToRowIndex, 4].Merge = true;
+                        ws.Cells[mergeFromRowIndex, 4, mergeToRowIndex, 4].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                        ws.Cells[mergeFromRowIndex, 4, mergeToRowIndex, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                        ws.Cells[mergeFromRowIndex, 5, mergeToRowIndex, 5].Merge = true;
+                        ws.Cells[mergeFromRowIndex, 5, mergeToRowIndex, 5].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                        ws.Cells[mergeFromRowIndex, 5, mergeToRowIndex, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
                         mergeFromRowIndex = mergeToRowIndex + 1;
                     }
                     //make the borders of cell F6 thick

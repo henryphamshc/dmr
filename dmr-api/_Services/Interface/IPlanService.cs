@@ -58,6 +58,7 @@ namespace DMR_API._Services.Interface
 
 
         Task<byte[]> ReportConsumptionCase2(ReportParams reportParams);
+        Task<byte[]> ReportConsumptionCase3(ReportParams reportParams);
         Task<byte[]> ReportConsumptionCase1(ReportParams reportParams);
         Task<List<GlueCreateDto1>> GetGlueByBuilding(int buildingID);
         Task<List<GlueCreateDto1>> GetGlueByBuildingModelName(int buildingID, int modelName);
@@ -94,6 +95,7 @@ namespace DMR_API._Services.Interface
 
         Task<List<ConsumtionDto>> ConsumptionByLineCase1(ReportParams reportParams);
         Task<List<ConsumtionDto>> ConsumptionByLineCase2(ReportParams reportParams);
+        Task<List<ConsumtionDto>> ConsumptionByLineCase3(ReportParams reportParams);
         Task<List<TodolistDto>> CheckTodolistAllBuilding();
         Task<object> Dispatch(DispatchParams todolistDto);
         Task<MixingInfo> Print(DispatchParams todolistDto);
