@@ -2729,7 +2729,7 @@ namespace DMR_API._Services.Services
                     var printTime = DateTime.Now.ToLocalTime();
                     mixing.PrintTime = printTime;
                     _repoMixingInfo.Update(mixing);
-                    _repoMixingInfo.Save();
+                    await _repoMixingInfo.SaveAll();
 
                     dispatchlist.ForEach(item =>
                     {
@@ -2807,7 +2807,7 @@ namespace DMR_API._Services.Services
                             }
                         }
                     }
-                    await transaction.RollbackAsync();
+                    await transaction.CommitAsync();
                     return mixing;
 
                 }
